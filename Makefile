@@ -1,9 +1,10 @@
 # Source files 
-SRCS = main.c system_stm32f4xx.c homework4.c homework3.c tm_stm32f4_onewire.c
-DS18_SRCS = tm_stm32f4_delay.c tm_stm32f4_timer_properties.c tm_stm32f4_gpio.c ds18b20.c 
+SRCS = main.c system_stm32f4xx.c homework3.c 
+
+DS18_SRCS = ds18b20.c OneWire/tm_stm32f4_delay.c OneWire/tm_stm32f4_onewire.c OneWire/tm_stm32f4_timer_properties.c OneWire/tm_stm32f4_gpio.c  
 SRCS += $(DS18_SRCS)
-ACCELEROMETER_SRCS = accelerometers/accelerometers.c accelerometers/tm_accelerometers/tm_stm32f4_lis302dl_lis3dsh.c accelerometers/tm_accelerometers/tm_stm32f4_spi.c
-SRCS += $(ACCELEROMETER_SRCS)
+#ACCELEROMETER_SRCS = accelerometers/accelerometers.c accelerometers/tm_accelerometers/tm_stm32f4_lis302dl_lis3dsh.c accelerometers/tm_accelerometers/tm_stm32f4_spi.c
+#SRCS += $(ACCELEROMETER_SRCS)
 
 
 

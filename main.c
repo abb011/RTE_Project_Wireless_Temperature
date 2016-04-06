@@ -7,7 +7,6 @@
 #include <stdio.h>
 
 #include "homework3.h"
-#include "homework4.h"
 
 static void init_systick();
 static void delay_ms(uint32_t n);
@@ -89,7 +88,6 @@ int main(void)
   init_LED_pins();
   init_button();
   
-  init_gesture_detection();
  
   delay_ms(20);
   
