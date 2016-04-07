@@ -51,7 +51,7 @@ static float read_temperature(TM_OneWire_t * tempSensor){
 }
 
 uint8_t init_tempSensor(){
-	return init_ds18b20(&temperatureSensor, GPIOA, GPIO_Pin_15);
+	return init_ds18b20(&temperatureSensor, GPIOC, GPIO_Pin_15);
 }
 
 float getTemperature(){
