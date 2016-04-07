@@ -92,39 +92,23 @@ int main(void)
   delay_ms(20);
   
   add_timed_task(print_times, 5);
-  //add_timed_task(gesture_detection, .02);
 
   
   
   delay_ms(100);
-  //add_timed_task(read_acc,0.004);
-  //add_timed_task(gesture_detection_avg, 0.02);
-  //add_timed_task(printPitchAndRoll,1.0);
+
   printf("%d\n", init_tempSensor());
-  float temp_C = getTemperature();
-  printf("The current Temperature is %f\n",temp_C);
   delay_ms(1000);
+  float temp_C = getTemperature();
+  
+  printf("The current Temperature is %f\n",temp_C);
+
   add_timed_task(printTemps, 2);
   while(1){
 	  run_TimedTasks();
 	  
   }
 
-/*  uint32_t t_prev = 0;
-  while (1)
-	{
-    if ( (msTicks - t_prev) >= 1000) // 1 second has elapsed
-    {
-      t_prev = msTicks;
-      float a[3]; // array of 3 floats into which accelerometer data will be read
-      read_accelerometers(a); // read data from accelerometers (X, Y, and Z axes)
-      printf("%f %f %f\n", a[0], a[1], a[2]);
-
-      calc_pitch_roll(a[0], a[1], a[2], &pitch, &roll);
-      printf("Pitch = %f, Roll = %f\n", pitch, roll);
-    }
-  }
-  */
 }
 
 
