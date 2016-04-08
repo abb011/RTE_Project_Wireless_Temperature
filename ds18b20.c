@@ -1,25 +1,24 @@
 #include "ds18b20.h"
 
-#include <stdio.h>
 
-
-#define MSB_MASK 0x07
-#define LSB_MASK_FRAC 0x0f
-#define LSB_MASK_WHOLE 0xf0
-#define LSB_WHOLE_SHIFT 4
-#define MSB_POW 4
-#define LSB_FRAC_DIV 16.0
-#define TEMP_CONV_COMMAND 0x44
-#define ONLY_ONE_SLAVE 0xCC
-#define READ_DATA  0xBE
-
+static float temp_measured[NUM_READINGS];
+static uint32_t index_w=0;
 static  TM_OneWire_t temperatureSensor;
 
 static uint8_t init_ds18b20(TM_OneWire_t * tempSensor, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin){
 	TM_DELAY_Init();
 	TM_OneWire_Init(tempSensor, GPIOx, GPIO_Pin);
 	//TM_OneWire_Reset(tempSensor);
-	return TM_OneWire_First(tempSensor);
+	
+	//Start the first temperature conversion
+	uint8_t numDevices = TM_OneWire_First(tempSensor);
+	TM_OneWire_Reset(tempSensor);
+	uint8_t byte = ONLY_ONE_SLAVE;
+	TM_OneWire_WriteByte(tempSensor, byte);
+	byte = TEMP_CONV_COMMAND;
+	TM_OneWire_WriteByte(tempSensor, byte);
+	
+	return numDevices;
 }
 
 static float read_temperature(TM_OneWire_t * tempSensor){
@@ -32,13 +31,19 @@ static float read_temperature(TM_OneWire_t * tempSensor){
 	TM_OneWire_GetFullROM(tempSensor,data);
 	TM_OneWire_Reset(tempSensor);
 	TM_OneWire_Select(tempSensor, data);
+	//Do I NEED THE ABOVE SELECTION THINGS? Will need to experiment
+	
 	TM_OneWire_WriteByte(tempSensor, READ_DATA);
 	
 	
 	lsb = TM_OneWire_ReadByte(tempSensor);
 	msb = TM_OneWire_ReadByte(tempSensor);
-	printf("LSB: %x\n", lsb);
-	printf("MSB: %x\n", msb);
+	float sign = 1.0;
+	if(msb&SIGN_BIT){
+		sign = -1.0;
+	}
+	//printf("LSB: %x\n", lsb);
+	//printf("MSB: %x\n", msb);
 	
 
 	
@@ -47,6 +52,7 @@ static float read_temperature(TM_OneWire_t * tempSensor){
 	
 	temp = (lsb & LSB_MASK_FRAC)/LSB_FRAC_DIV;
 	temp += wholeTemp;
+	temp *= sign;
 	return temp;
 }
 
@@ -56,12 +62,36 @@ uint8_t init_tempSensor(){
 
 float getTemperature(){
 	//Start getting a new Temp measurement
+	//Delay(1000);
+	float temp = read_temperature(&temperatureSensor);
+	temp_measured[(index_w++)%NUM_READINGS] = temp;
+
+	
+	//Handle overflow case so we have the whole average not just firt point
+	if(index_w == MAX_I_W)
+		index_w += NUM_READINGS;
+	
+	
 	TM_OneWire_Reset(&temperatureSensor);
 	uint8_t byte = ONLY_ONE_SLAVE;
 	TM_OneWire_WriteByte(&temperatureSensor, byte);
 	byte = TEMP_CONV_COMMAND;
 	TM_OneWire_WriteByte(&temperatureSensor, byte);
 	
-	Delay(1000);
-	return read_temperature(&temperatureSensor);
+	return temp;
+}
+void storeTemperature(){
+	getTemperature();
+}
+
+float getAvgTemperature(){
+	uint32_t limit = index_w;
+	uint32_t i;
+	float average=0;
+	if(index_w>NUM_READINGS-1)
+		limit = NUM_READINGS;
+	for(i = 0; i<limit; i++){
+		average+=temp_measured[i];
+	}
+	return average/limit;
 }
