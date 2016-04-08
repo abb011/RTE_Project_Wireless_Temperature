@@ -70,9 +70,9 @@ void init_button()
 
 void initialise_monitor_handles();
 
-void printTemps(){
-	float temp_C = getTemperature();
-	printf("The current Temperature is %f\n",temp_C);
+void printAVGTemps(){
+	float temp_C = getAvgTemperature();
+	printf("The Average Temperature is %f\n",temp_C);
 	return;
 }
 
@@ -88,14 +88,6 @@ int main(void)
   init_LED_pins();
   init_button();
   
- 
-  delay_ms(20);
-  
-  add_timed_task(print_times, 5);
-
-  
-  
-  delay_ms(100);
 
   printf("%d\n", init_tempSensor());
   delay_ms(1000);
@@ -103,7 +95,10 @@ int main(void)
   
   printf("The current Temperature is %f\n",temp_C);
 
-  add_timed_task(printTemps, 2);
+  add_timed_task(storeTemperature, DS18B20_PERIOD);
+  add_timed_task(printAVGTemps,1);
+  
+  
   while(1){
 	  run_TimedTasks();
 	  
