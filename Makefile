@@ -52,7 +52,7 @@ SRCS += $(STM_COMMON)/Libraries/CMSIS/ST/STM32F4xx/Source/Templates/TrueSTUDIO/s
 
 # add required files from STM32 standard peripheral library
 STM_SRCDIR = $(STM_COMMON)/Libraries/STM32F4xx_StdPeriph_Driver/src
-SRCS += $(STM_SRCDIR)/stm32f4xx_gpio.c $(STM_SRCDIR)/stm32f4xx_spi.c $(STM_SRCDIR)/stm32f4xx_rcc.c
+SRCS += $(STM_SRCDIR)/stm32f4xx_gpio.c $(STM_SRCDIR)/stm32f4xx_spi.c $(STM_SRCDIR)/stm32f4xx_rcc.c  $(STM_SRCDIR)/stm32f4xx_usart.c  $(STM_SRCDIR)/misc.c
 
 OBJS = $(addprefix $(BUILDDIR)/, $(addsuffix .o, $(basename $(SRCS))))
 

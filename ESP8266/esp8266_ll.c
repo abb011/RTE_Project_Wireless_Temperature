@@ -38,6 +38,7 @@
 uint8_t ESP8266_LL_USARTInit(uint32_t baudrate) {
 	/* Init USART */
 	
+	
 	/* Return 0 = Successful */
 	return 0;
 }
