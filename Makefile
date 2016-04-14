@@ -1,7 +1,7 @@
 # Source files 
 SRCS = main.c system_stm32f4xx.c homework3.c 
 UART_SRCS = UART/tm_stm32f4_usart.c
-ESP8266_SRCS = ESP8266/esp8266.c ESP8266/buffer.c ESP8266/esp8266_ll.c 
+ESP8266_SRCS = ESP8266/esp8266.c ESP8266/buffer.c ESP8266/esp8266_ll.c  wireless.c
 DS18_SRCS = ds18b20.c OneWire/tm_stm32f4_delay.c OneWire/tm_stm32f4_onewire.c OneWire/tm_stm32f4_timer_properties.c OneWire/tm_stm32f4_gpio.c  
 SRCS += $(DS18_SRCS) $(ESP8266_SRCS)
 #ACCELEROMETER_SRCS = accelerometers/accelerometers.c accelerometers/tm_accelerometers/tm_stm32f4_lis302dl_lis3dsh.c accelerometers/tm_accelerometers/tm_stm32f4_spi.c
