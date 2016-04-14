@@ -1,13 +1,19 @@
 #include "stm32f4xx.h"
 #include "stm32f4xx_rcc.h"
 #include "stm32f4xx_gpio.h"
+#include "wireless.h"
+
 
 #include "ds18b20.h"
 
 #include <stdio.h>
 
 #include "homework3.h"
+#include "misc.h"	
+#include "stm32f4xx_usart.h"
 
+#define MAX_STRLEN 32
+volatile char received_string[MAX_STRLEN+1];
 static void init_systick();
 static void delay_ms(uint32_t n);
 volatile uint32_t msTicks; // counts 1 ms timeTicks
@@ -76,6 +82,84 @@ void printAVGTemps(){
 	return;
 }
 
+//UART Structs
+USART_InitTypeDef USART_InitStructure;
+NVIC_InitTypeDef NVIC_InitStructure;
+GPIO_InitTypeDef GPIO_InitStructure;
+
+// UART Pin C10 (TXD) C11 (RXD)
+void USART_Configuration(void){
+	//Clocks
+	RCC_AHB1PeriphClockCmd( RCC_AHB1Periph_GPIOC, ENABLE);
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART4, ENABLE);
+	
+	/* Configure USART2 Tx (PA.02) as alternate function push-pull */
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11 | GPIO_Pin_10;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+	GPIO_Init(GPIOC, &GPIO_InitStructure);
+	// Map UART4 to E.00 and E.01
+	GPIO_PinAFConfig(GPIOC, GPIO_PinSource10, GPIO_AF_UART4);
+	GPIO_PinAFConfig(GPIOC, GPIO_PinSource11, GPIO_AF_UART4);
+	
+	// Initialize Transmit
+	USART_InitStructure.USART_BaudRate = 115200;
+	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
+	USART_InitStructure.USART_StopBits = USART_StopBits_1;
+	USART_InitStructure.USART_Parity = USART_Parity_No;
+	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+	USART_InitStructure.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;
+	/* Configure USART */
+	USART_Init(UART4, &USART_InitStructure);
+	
+	// Init the receive side and enable interrupts
+	NVIC_InitStructure.NVIC_IRQChannel = UART4_IRQn;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure);
+	
+	
+	
+	
+	/* Enable the USART */
+	USART_Cmd(UART4, ENABLE);
+}
+
+void uart_print(USART_TypeDef * USARTx, volatile char * s ){
+	//Until the data is 0
+	while(*s){
+		while(!(USARTx->SR&0x00000040));
+		USART_SendData(USARTx, *s);
+		*s++;
+	}
+	
+}
+
+void UART4_IRQHandler(void){
+	printf("In Interrupt Handler\n");
+	// check if the UART4 receive interrupt flag was set
+	if( USART_GetITStatus(UART4, USART_IT_RXNE) ){
+		
+		static uint8_t cnt = 0; // this counter is used to determine the string length
+		char t = USART1->DR; // the character from the USART1 data register is saved in t
+		
+		/* check if the received character is not the LF character (used to determine end of string) 
+		 * or the if the maximum string length has been been reached 
+		 */
+		if( (t != '\n') && (cnt < MAX_STRLEN) ){ 
+			received_string[cnt] = t;
+			cnt++;
+		}
+		else{ // otherwise reset the character counter and print the received string
+			cnt = 0;
+			printf("%s\n", received_string);
+		}
+	}
+}
+
 float pitch, roll;
 uint32_t gesture_state=0;
 uint32_t announce_gesture = 0;
@@ -88,7 +172,10 @@ int main(void)
   init_LED_pins();
   init_button();
   
+  //Init the UARt
+  USART_Configuration();
 
+  uart_print(UART4, "Hello World\r\n");
   printf("%d\n", init_tempSensor());
   delay_ms(1000);
   float temp_C = getTemperature();
@@ -96,7 +183,8 @@ int main(void)
   printf("The current Temperature is %f\n",temp_C);
 
   add_timed_task(storeTemperature, DS18B20_PERIOD);
-  add_timed_task(printAVGTemps,1);
+  add_timed_task(printAVGTemps,4);
+  //add_timed_task(printstuff,0.5);
   
   
   while(1){
