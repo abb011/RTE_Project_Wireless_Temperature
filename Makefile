@@ -104,4 +104,7 @@ openocd:
 
 flash: $(BIN)
 	st-flash write $(BIN) 0x8000000
+	
+user:
+	echo $USER
 
