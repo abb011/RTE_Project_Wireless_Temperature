@@ -93,6 +93,10 @@ void USART_Configuration(void){
 	RCC_AHB1PeriphClockCmd( RCC_AHB1Periph_GPIOC, ENABLE);
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART4, ENABLE);
 	
+		// Map UART4 to C.10 and C.11
+	GPIO_PinAFConfig(GPIOC, GPIO_PinSource10, GPIO_AF_UART4);
+	GPIO_PinAFConfig(GPIOC, GPIO_PinSource11, GPIO_AF_UART4);
+	
 	/* Configure USART2 Tx (PA.02) as alternate function push-pull */
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11 | GPIO_Pin_10;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -100,9 +104,7 @@ void USART_Configuration(void){
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
-	// Map UART4 to E.00 and E.01
-	GPIO_PinAFConfig(GPIOC, GPIO_PinSource10, GPIO_AF_UART4);
-	GPIO_PinAFConfig(GPIOC, GPIO_PinSource11, GPIO_AF_UART4);
+
 	
 	// Initialize Transmit
 	USART_InitStructure.USART_BaudRate = 115200;
@@ -113,6 +115,9 @@ void USART_Configuration(void){
 	USART_InitStructure.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;
 	/* Configure USART */
 	USART_Init(UART4, &USART_InitStructure);
+	
+	//Enable receive Interrupt
+	USART_ITConfig(UART4, USART_IT_RXNE, ENABLE);
 	
 	// Init the receive side and enable interrupts
 	NVIC_InitStructure.NVIC_IRQChannel = UART4_IRQn;
@@ -126,6 +131,7 @@ void USART_Configuration(void){
 	
 	/* Enable the USART */
 	USART_Cmd(UART4, ENABLE);
+	
 }
 
 void uart_print(USART_TypeDef * USARTx, volatile char * s ){
@@ -139,21 +145,23 @@ void uart_print(USART_TypeDef * USARTx, volatile char * s ){
 }
 
 void UART4_IRQHandler(void){
-	printf("In Interrupt Handler\n");
+	//printf("In Interrupt Handler\n");
 	// check if the UART4 receive interrupt flag was set
 	if( USART_GetITStatus(UART4, USART_IT_RXNE) ){
 		
 		static uint8_t cnt = 0; // this counter is used to determine the string length
-		char t = USART1->DR; // the character from the USART1 data register is saved in t
+		char t = UART4->DR; // the character from the USART4 data register is saved in t
 		
 		/* check if the received character is not the LF character (used to determine end of string) 
 		 * or the if the maximum string length has been been reached 
 		 */
-		if( (t != '\n') && (cnt < MAX_STRLEN) ){ 
+		if( (((char)t) != '\n') && (cnt < MAX_STRLEN) ){ 
 			received_string[cnt] = t;
 			cnt++;
+			//printf("Received %c\n", (char)t);
 		}
 		else{ // otherwise reset the character counter and print the received string
+			received_string[cnt] = '\0';
 			cnt = 0;
 			printf("%s\n", received_string);
 		}
