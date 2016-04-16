@@ -11,6 +11,7 @@
 #include "homework3.h"
 #include "misc.h"	
 #include "stm32f4xx_usart.h"
+#include "ESP8266/esp8266.h"
 
 #define MAX_STRLEN 32
 volatile char received_string[MAX_STRLEN+1];
@@ -85,9 +86,19 @@ void printAVGTemps(){
 float pitch, roll;
 uint32_t gesture_state=0;
 uint32_t announce_gesture = 0;
+ESP8266_t wireless_S;
+extern BUFFER_t USART_Buffer;
+ESP8266_APConfig_t ap_s;
 int main(void)
 {
   // initialize
+  ap_s.SSID = "TEST";
+  ap_s.Pass = "password";
+  ap_s.Ecn = ESP8266_Ecn_OPEN;//ESP8266_Ecn_t. ;
+  ap_s.Channel = 2;
+  ap_s.MaxConnections = 10;
+  ap_s.Hidden = 0;
+  
   SystemInit();
   initialise_monitor_handles();
   init_systick();
@@ -102,10 +113,19 @@ int main(void)
   delay_ms(1000);
   float temp_C = getTemperature();
   
+  //struct ESP8266
   printf("The current Temperature is %f\n",temp_C);
 
   add_timed_task(storeTemperature, DS18B20_PERIOD);
-  add_timed_task(printAVGTemps,4);
+ // add_timed_task(printAVGTemps,4);
+  ESP8266_Init(&wireless_S, 115200);
+  printf("Initializing Wifi \n");
+  //ESP8266_ListWifiStations(&wireless_S);
+  //delay_ms(1000);
+ // printf("Wifi Stations\n %s\n", USART_Buffer.Buffer);
+  ESP8266_SetAP(&wireless_S, &ap_s);
+  printf("Hosting a Wifi AccessPoint");
+  
   //add_timed_task(printstuff,0.5);
   
   
