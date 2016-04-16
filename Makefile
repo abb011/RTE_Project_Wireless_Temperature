@@ -26,7 +26,11 @@ CC=arm-none-eabi-gcc
 LD=arm-none-eabi-gcc
 OBJCOPY = arm-none-eabi-objcopy
 SIZE=arm-none-eabi-size
+ifeq ($(OS),Windows_NT)
+MKDIR=busybox mkdir
+else
 MKDIR=mkdir
+endif
 
 
 #Debug
