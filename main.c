@@ -81,6 +81,11 @@ void printAVGTemps(){
 	printf("The Average Temperature is %f\n",temp_C);
 	return;
 }
+<<<<<<< HEAD
+
+
+=======
+>>>>>>> refs/remotes/origin/Alex's-Branch
 float pitch, roll;
 uint32_t gesture_state=0;
 uint32_t announce_gesture = 0;
