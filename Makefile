@@ -32,6 +32,10 @@ else
 MKDIR=mkdir
 endif
 
+ifeq ($(USERNAME),alexb)
+MKDIR=mkdir
+endif
+
 
 #Debug
 CFLAGS  = -ggdb -O0 -Wall
@@ -104,4 +108,4 @@ openocd:
 
 flash: $(BIN)
 	st-flash write $(BIN) 0x8000000
-
+	
