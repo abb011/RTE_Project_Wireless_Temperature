@@ -35,6 +35,9 @@ endif
 ifeq ($(USERNAME),alexb)
 MKDIR=mkdir
 endif
+ifeq ($(USERNAME),Alex)
+MKDIR=mkdir
+endif
 
 
 #Debug
