@@ -95,7 +95,7 @@
 
 /* Buffers */
 static BUFFER_t TMP_Buffer;
-BUFFER_t USART_Buffer;
+static BUFFER_t USART_Buffer;
 static uint8_t TMPBuffer[ESP8266_TMPBUFFER_SIZE];
 static uint8_t USARTBuffer[ESP8266_USARTBUFFER_SIZE];
 
