@@ -111,6 +111,22 @@ void UART4_IRQHandler(void){
 	}
 }
 
+void init_ESP8266_reset(){
+	GPIO_InitTypeDef GPIO_InitDef;
+	GPIO_InitDef.GPIO_Pin= GPIO_Pin_12;
+	GPIO_InitDef.GPIO_Mode = GPIO_Mode_OUT;
+	GPIO_InitDef.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitDef.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_InitDef.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init(GPIOC, &GPIO_InitDef);
+}
+void reset_low_ESP8266(){
+	GPIO_ResetBits(GPIOC, GPIO_Pin_12 );
+}
+void reset_high_ESP8266(){
+	GPIO_SetBits(GPIOC, GPIO_Pin_12 );
+}
+
 /*
 void UART4_IRQHandler(void){
 	//printf("In Interrupt Handler\n");
