@@ -83,20 +83,26 @@ void printAVGTemps(){
 	return;
 }
 
+
 float pitch, roll;
 uint32_t gesture_state=0;
 uint32_t announce_gesture = 0;
 ESP8266_t wireless_S;
 extern BUFFER_t USART_Buffer;
 ESP8266_APConfig_t ap_s;
+
+void esp8266_update_func(){
+	ESP8266_Update(&wireless_S);
+}
+
 int main(void)
 {
   // initialize
   ap_s.SSID = "TEST";
-  ap_s.Pass = "password";
+  ap_s.Pass = "";
   ap_s.Ecn = ESP8266_Ecn_OPEN;//ESP8266_Ecn_t. ;
   ap_s.Channel = 2;
-  ap_s.MaxConnections = 10;
+  ap_s.MaxConnections = 4; //Cannot be greater than 4
   ap_s.Hidden = 0;
   
   SystemInit();
@@ -117,14 +123,27 @@ int main(void)
   printf("The current Temperature is %f\n",temp_C);
 
   add_timed_task(storeTemperature, DS18B20_PERIOD);
- // add_timed_task(printAVGTemps,4);
+  add_timed_task(printAVGTemps,4);
+  add_timed_task(esp8266_update_func, .05);
+  
   ESP8266_Init(&wireless_S, 115200);
   printf("Initializing Wifi \n");
-  //ESP8266_ListWifiStations(&wireless_S);
-  //delay_ms(1000);
- // printf("Wifi Stations\n %s\n", USART_Buffer.Buffer);
-  ESP8266_SetAP(&wireless_S, &ap_s);
-  printf("Hosting a Wifi AccessPoint");
+  ESP8266_WaitReady(&wireless_S);
+  ESP8266_ListWifiStations(&wireless_S);
+  ESP8266_WaitReady(&wireless_S);
+  delay_ms(1000);
+  printf("Wifi Stations\n %s\n", USART_Buffer.Buffer);
+  ESP8266_SetMode(&wireless_S, ESP8266_Mode_AP);
+
+  ESP8266_WaitReady(&wireless_S);
+  ESP8266_Result_t res = ESP8266_SetAP(&wireless_S, &ap_s);
+  printf("Hosting a Wifi AccessPoint: %d\n", res);
+  while(res!=0){
+	ESP8266_WaitReady(&wireless_S);
+	res = ESP8266_SetAP(&wireless_S, &ap_s);
+	printf("Hosting a Wifi AccessPoint: %d\n", res);
+	delay_ms(500);
+  }
   
   //add_timed_task(printstuff,0.5);
   

@@ -119,14 +119,14 @@ extern "C" {
  */
 typedef enum {
 	ESP_OK = 0x00,          /*!< Everything is OK */
-	ESP_ERROR,              /*!< An error occurred */
-	ESP_DEVICENOTCONNECTED, /*!< Device is not connected to UART */
-	ESP_TIMEOUT,            /*!< Timeout was detected when sending command to ESP module */
-	ESP_LINKNOTVALID,       /*!< Link for connection is not valid */
-	ESP_NOHEAP,             /*!< Heap memory is not available */
-	ESP_WIFINOTCONNECTED,   /*!< Wifi is not connected to network */
-	ESP_BUSY,               /*!< Device is busy, new command is not possible */
-	ESP_INVALIDPARAMETERS   /*!< Parameters for functions are invalid */
+	ESP_ERROR = 0x01,              /*!< An error occurred */
+	ESP_DEVICENOTCONNECTED = 0x02, /*!< Device is not connected to UART */
+	ESP_TIMEOUT = 0x03,            /*!< Timeout was detected when sending command to ESP module */
+	ESP_LINKNOTVALID = 0x04,       /*!< Link for connection is not valid */
+	ESP_NOHEAP = 0x05,             /*!< Heap memory is not available */
+	ESP_WIFINOTCONNECTED= 0x06,   /*!< Wifi is not connected to network */
+	ESP_BUSY = 0x07,               /*!< Device is busy, new command is not possible */
+	ESP_INVALIDPARAMETERS = 0x08   /*!< Parameters for functions are invalid */
 } ESP8266_Result_t;
 
 /**
