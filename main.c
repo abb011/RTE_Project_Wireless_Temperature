@@ -83,20 +83,37 @@ void printAVGTemps(){
 	return;
 }
 
+
+
 float pitch, roll;
 uint32_t gesture_state=0;
 uint32_t announce_gesture = 0;
 ESP8266_t wireless_S;
-extern BUFFER_t USART_Buffer;
 ESP8266_APConfig_t ap_s;
+extern uint16_t numConnections;
+extern uint16_t reply;
+
+void esp8266_update_func(){
+	ESP8266_Update(&wireless_S);
+}
+void sendToConnection(){
+	if(reply && (numConnections>0)){
+		ESP8266_WaitReady(&wireless_S);
+		ESP8266_RequestSendData(&wireless_S, &(wireless_S.Connection[0]));
+		reply = 0;
+	}else if (numConnections>1){
+		printf("Number Connections %d\n", numConnections);
+	}
+}
+
 int main(void)
 {
   // initialize
   ap_s.SSID = "TEST";
-  ap_s.Pass = "password";
+  ap_s.Pass = "";
   ap_s.Ecn = ESP8266_Ecn_OPEN;//ESP8266_Ecn_t. ;
   ap_s.Channel = 2;
-  ap_s.MaxConnections = 10;
+  ap_s.MaxConnections = 4; //Cannot be greater than 4
   ap_s.Hidden = 0;
   
   SystemInit();
@@ -117,20 +134,33 @@ int main(void)
   printf("The current Temperature is %f\n",temp_C);
 
   add_timed_task(storeTemperature, DS18B20_PERIOD);
- // add_timed_task(printAVGTemps,4);
+  //add_timed_task(printAVGTemps,4);
+  add_timed_task(esp8266_update_func, .05);
+  add_timed_task(sendToConnection, 2);
+  
   ESP8266_Init(&wireless_S, 115200);
   printf("Initializing Wifi \n");
-  //ESP8266_ListWifiStations(&wireless_S);
-  //delay_ms(1000);
- // printf("Wifi Stations\n %s\n", USART_Buffer.Buffer);
-  ESP8266_SetAP(&wireless_S, &ap_s);
-  printf("Hosting a Wifi AccessPoint");
+  ESP8266_WaitReady(&wireless_S);
+  ESP8266_ListWifiStations(&wireless_S);
+  ESP8266_WaitReady(&wireless_S);
+  delay_ms(1000);
+  ESP8266_SetMode(&wireless_S, ESP8266_Mode_AP);
+
+  ESP8266_WaitReady(&wireless_S);
+  ESP8266_Result_t res = ESP8266_SetAP(&wireless_S, &ap_s);
+  printf("Hosting a Wifi AccessPoint: %d\n", res);
+  
+  ESP8266_WaitReady(&wireless_S);
+  uint16_t port = 3333;
+  res = ESP8266_ServerEnable(&wireless_S, port);
+  printf("Hosting a server at port %d: Success = 0: %d\n", port, res);
   
   //add_timed_task(printstuff,0.5);
   
   
   while(1){
 	  run_TimedTasks();
+
 	  
   }
 

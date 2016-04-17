@@ -1,5 +1,7 @@
 #include "wireless.h"
 
+uint16_t numConnections = 0;
+uint16_t reply = 0;
 void TM_USART1_ReceiveHandler(uint8_t c) {
 //Do your stuff here when byte is received
 }
@@ -113,7 +115,10 @@ void ESP8266_Callback_WifiDetected(ESP8266_t* ESP8266, ESP8266_APs_t* ESP8266_AP
  * \note   With weak parameter to prevent link errors if not defined by user
  */
 void ESP8266_Callback_ServerConnectionActive(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection){
-	printf("Received a new Server Connection\n");
+	numConnections++;
+	//printf("Received a new Server Connection\n");
+	//ESP8266_WaitReady(ESP8266);
+	//printf("ESP is ready again\n");
 }
 
 /**
@@ -124,7 +129,8 @@ void ESP8266_Callback_ServerConnectionActive(ESP8266_t* ESP8266, ESP8266_Connect
  * \note   With weak parameter to prevent link errors if not defined by user
  */
 void ESP8266_Callback_ServerConnectionClosed(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection){
-	printf("Server closed not sure if we closed it or just client disconnected");
+	numConnections--;
+	printf("TCP Connection end of data stream\n");
 	
 }
 
@@ -137,8 +143,12 @@ void ESP8266_Callback_ServerConnectionClosed(ESP8266_t* ESP8266, ESP8266_Connect
  * \note   With weak parameter to prevent link errors if not defined by user
  */
 void ESP8266_Callback_ServerConnectionDataReceived(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection, char* Buffer){
-		printf("Server received data\n %s\n", Buffer);
-		
+		printf("Server received data\n %s", Buffer);
+		printf("Connection: %d.%d.%d.%d : %d\n",Connection->RemoteIP[0],Connection->RemoteIP[1],Connection->RemoteIP[2],Connection->RemoteIP[3], Connection->RemotePort );
+		reply = 1;
+		//ESP8266_WaitReady(ESP8266);
+
+		//ESP8266_RequestSendData(ESP8266, Connection);
 }
 
 /**
@@ -153,7 +163,11 @@ void ESP8266_Callback_ServerConnectionDataReceived(ESP8266_t* ESP8266, ESP8266_C
  */
 uint16_t ESP8266_Callback_ServerConnectionSendData(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection, char* Buffer, uint16_t max_buffer_size){
 	printf("this function is called when a client requests data from a server. This is when we would send the temperature\n");
-	uint16_t numBytes = 0;
+	uint16_t numBytes = 10;
+	char temp[10] = "1234567890";
+	for(uint16_t i = 0; i < numBytes; i++)
+		Buffer[i] = temp[i];
+
 	return numBytes;
 }
 

@@ -95,7 +95,7 @@
 
 /* Buffers */
 static BUFFER_t TMP_Buffer;
-BUFFER_t USART_Buffer;
+static BUFFER_t USART_Buffer;
 static uint8_t TMPBuffer[ESP8266_TMPBUFFER_SIZE];
 static uint8_t USARTBuffer[ESP8266_USARTBUFFER_SIZE];
 
@@ -1105,10 +1105,8 @@ ESP8266_Result_t ESP8266_GetAP(ESP8266_t* ESP8266) {
 ESP8266_Result_t ESP8266_SetAP(ESP8266_t* ESP8266, ESP8266_APConfig_t* ESP8266_Config) {
 	uint8_t ecn, maxc, hid, sep = ',';
 	char ch[4];
-	
 	/* Check IDLE state */
 	ESP8266_CHECK_IDLE(ESP8266);
-	
 	/* Check input values */
 	if (
 		strlen(ESP8266_Config->SSID) > 64 ||
@@ -1142,9 +1140,9 @@ ESP8266_Result_t ESP8266_SetAP(ESP8266_t* ESP8266, ESP8266_APConfig_t* ESP8266_C
 	ESP8266_USARTSENDCHAR(&hid);
 	ESP8266_USARTSENDSTRING("\r\n");
 	
+	printf("Sending the Real Command\n");
 	/* Send command */
 	SendCommand(ESP8266, ESP8266_COMMAND_CWSAP, NULL, NULL);
-	
 	/* Return status */
 	return ESP8266_Update(ESP8266);
 }
