@@ -392,6 +392,10 @@ typedef struct {
  * \{
  */
 
+ 
+ /** Custom send data function*/
+ ESP8266_Result_t ESP8266_SendData(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection, uint8_t* data, uint16_t data_n);
+ 
 /**
  * \brief  Initializes ESP8266 module
  * \param  *ESP8266: Pointer to working \ref ESP8266_t structure
