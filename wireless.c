@@ -116,7 +116,7 @@ void ESP8266_Callback_WifiDetected(ESP8266_t* ESP8266, ESP8266_APs_t* ESP8266_AP
  */
 void ESP8266_Callback_ServerConnectionActive(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection){
 	numConnections++;
-	//printf("Received a new Server Connection\n");
+	printf("Received a new Server Connection @ %d\n", Connection->Number);
 	//ESP8266_WaitReady(ESP8266);
 	//printf("ESP is ready again\n");
 }
@@ -145,6 +145,7 @@ void ESP8266_Callback_ServerConnectionClosed(ESP8266_t* ESP8266, ESP8266_Connect
 void ESP8266_Callback_ServerConnectionDataReceived(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection, char* Buffer){
 		printf("Server received data\n %s", Buffer);
 		printf("Connection: %d.%d.%d.%d : %d\n",Connection->RemoteIP[0],Connection->RemoteIP[1],Connection->RemoteIP[2],Connection->RemoteIP[3], Connection->RemotePort );
+		printf("Connection @%d\n", Connection->Number);
 		reply = 1;
 		//ESP8266_WaitReady(ESP8266);
 

@@ -80,7 +80,7 @@
  *
  *          If option is set to 0, then each connection will have separate data buffer which decreases option for data loss.
  */
-#define ESP8266_USE_SINGLE_CONNECTION_BUFFER      1
+#define ESP8266_USE_SINGLE_CONNECTION_BUFFER      0
 
 /**
  * @brief   Buffer size for connection data.

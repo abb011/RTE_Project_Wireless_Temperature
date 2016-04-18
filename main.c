@@ -97,12 +97,16 @@ void esp8266_update_func(){
 	ESP8266_Update(&wireless_S);
 }
 void sendToConnection(){
-	if(reply && (numConnections>0)){
-		ESP8266_WaitReady(&wireless_S);
-		ESP8266_RequestSendData(&wireless_S, &(wireless_S.Connection[0]));
+	char temp[100] = "<html> <title> Temperature Stuff</title> <body> HORRAY THINGS </body> </html>";
+	if(reply){
+		for(uint16_t i = 0; i<5; i ++){
+			if(wireless_S.Connection[i].Active){
+				printf("%d\n",ESP8266_WaitReady(&wireless_S));
+				ESP8266_SendData(&wireless_S, &(wireless_S.Connection[i]),temp, strlen(temp));
+				printf("Active Connection @ %d\n",i);
+			}
+		}
 		reply = 0;
-	}else if (numConnections>1){
-		printf("Number Connections %d\n", numConnections);
 	}
 }
 
@@ -135,16 +139,16 @@ int main(void)
 
   add_timed_task(storeTemperature, DS18B20_PERIOD);
   //add_timed_task(printAVGTemps,4);
-  add_timed_task(esp8266_update_func, .05);
-  add_timed_task(sendToConnection, 2);
+  add_timed_task(esp8266_update_func, .1);
+  add_timed_task(sendToConnection, .05);
   
   ESP8266_Init(&wireless_S, 115200);
   printf("Initializing Wifi \n");
   ESP8266_WaitReady(&wireless_S);
-  ESP8266_ListWifiStations(&wireless_S);
-  ESP8266_WaitReady(&wireless_S);
-  delay_ms(1000);
-  ESP8266_SetMode(&wireless_S, ESP8266_Mode_AP);
+  //ESP8266_ListWifiStations(&wireless_S);
+  //ESP8266_WaitReady(&wireless_S);
+  //delay_ms(1000);
+ // ESP8266_SetMode(&wireless_S, ESP8266_Mode_AP);
 
   ESP8266_WaitReady(&wireless_S);
   ESP8266_Result_t res = ESP8266_SetAP(&wireless_S, &ap_s);
@@ -155,12 +159,13 @@ int main(void)
   res = ESP8266_ServerEnable(&wireless_S, port);
   printf("Hosting a server at port %d: Success = 0: %d\n", port, res);
   
+  ESP8266_WaitReady(&wireless_S);
   //add_timed_task(printstuff,0.5);
   
   
   while(1){
 	  run_TimedTasks();
-
+	  //ESP8266_Update(&wireless_S);
 	  
   }
 
