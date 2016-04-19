@@ -91,6 +91,8 @@ extern "C" {
 /* This settings should not be modified */
 #define ESP8266_MAX_CONNECTIONS        5  /*!< Number of maximum active connections on ESP */
 #define ESP8266_MAX_CONNECTEDSTATIONS  10 /*!< Number of AP stations saved to received data array */
+/* Delay milliseconds */
+#define ESP8266_DELAYMS(ESP, x)        do {volatile uint32_t t = (ESP)->Time; while (((ESP)->Time - t) < (x));} while (0);
 
 /* Check for GNUC */
 #ifndef __weak	

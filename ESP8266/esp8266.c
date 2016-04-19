@@ -25,6 +25,18 @@
  */
 #include "esp8266.h"
 
+
+static void LED_On(uint32_t i)
+{
+  GPIOD->BSRRL = 1 << (i+12);
+}
+
+static void LED_Off(uint32_t i)
+{
+  GPIOD->BSRRH = 1 << (i+12);
+}
+
+
 /* Commands list */
 #define ESP8266_COMMAND_IDLE           0
 #define ESP8266_COMMAND_CWQAP          1
@@ -78,7 +90,7 @@
 #endif
 
 #define ESP8266_DEFAULT_BAUDRATE       115200 /*!< Default ESP8266 baudrate */
-#define ESP8266_TIMEOUT                3000  /*!< Timeout value in milliseconds */
+#define ESP8266_TIMEOUT                30  /*!< Timeout value in milliseconds */
 
 /* Debug */
 #define ESP8266_DEBUG(x)               printf("%s", x)
@@ -90,8 +102,6 @@
 /* Maximum number of return data size in one +IPD from ESP8266 module */
 #define ESP8255_MAX_BUFF_SIZE          5842
 
-/* Delay milliseconds */
-#define ESP8266_DELAYMS(ESP, x)        do {volatile uint32_t t = (ESP)->Time; while (((ESP)->Time - t) < (x));} while (0);
 
 /* Buffers */
 static BUFFER_t TMP_Buffer;
@@ -561,7 +571,8 @@ ESP8266_Result_t ESP8266_Update(ESP8266_t* ESP8266) {
 	/* If we are in IPD mode */
 	if (ESP8266->IPD.InIPD) {
 		BUFFER_t* buff;
-		printf("IN IPD MODE\n");
+		LED_On(0);
+		//printf("IN IPD MODE\n");
 		/* Check for USART buffer */
 		if (ESP8266->IPD.USART_Buffer) {
 			buff = &USART_Buffer;
@@ -577,7 +588,8 @@ ESP8266_Result_t ESP8266_Update(ESP8266_t* ESP8266) {
 		) {
 			/* Read from buffer */
 			BUFFER_Read(buff, (uint8_t *)&ch, 1);
-	
+			//if(BUFFER_GetFull(buff)%10 ==0)
+			//	printf("Got Ch %c:%lu\n",ch,BUFFER_GetFull(buff));
 			/* Add from USART buffer */
 			ESP8266->Connection[ESP8266->IPD.ConnNumber].Data[ESP8266->IPD.InPtr] = ch;
 			
@@ -585,7 +597,7 @@ ESP8266_Result_t ESP8266_Update(ESP8266_t* ESP8266) {
 			ESP8266->IPD.InPtr++;
 			ESP8266->IPD.PtrTotal++;
 			
-#if ESP8266_CONNECTION_BUFFER_SIZE < ESP8255_MAX_BUFF_SIZE
+#if  ESP8266_CONNECTION_BUFFER_SIZE < ESP8255_MAX_BUFF_SIZE
 			/* Check for pointer */
 			if (ESP8266->IPD.InPtr >= ESP8266_CONNECTION_BUFFER_SIZE && ESP8266->IPD.InPtr != ESP8266->Connection[ESP8266->IPD.ConnNumber].BytesReceived) {
 				/* Set connection buffer size */
@@ -608,10 +620,12 @@ ESP8266_Result_t ESP8266_Update(ESP8266_t* ESP8266) {
 		/* Check if everything received */
 		if (ESP8266->IPD.PtrTotal >= ESP8266->Connection[ESP8266->IPD.ConnNumber].BytesReceived) {
 			char* ptr;
-			printf("Received All bytes\n");
+			LED_Off(0);
+			LED_On(1);
+			//printf("Received All bytes\n");
 			/* Not in IPD anymore */
 			ESP8266->IPD.InIPD = 0;
-			printf("LEAVING INIPD MODE %d, %d\n", ESP8266->IPD.PtrTotal, ESP8266->Connection[ESP8266->IPD.ConnNumber].BytesReceived);
+			//printf("LEAVING INIPD MODE %d, %d\n", ESP8266->IPD.PtrTotal, ESP8266->Connection[ESP8266->IPD.ConnNumber].BytesReceived);
 			/* Set package data size */
 			ESP8266->Connection[ESP8266->IPD.ConnNumber].DataSize = ESP8266->IPD.InPtr;
 			ESP8266->Connection[ESP8266->IPD.ConnNumber].LastPart = 1;
@@ -1177,7 +1191,7 @@ ESP8266_Result_t ESP8266_SetAP(ESP8266_t* ESP8266, ESP8266_APConfig_t* ESP8266_C
 	ESP8266_USARTSENDCHAR(&hid);
 	ESP8266_USARTSENDSTRING("\r\n");
 	
-	printf("Sending the Real Command\n");
+	//printf("Sending the Real Command\n");
 	/* Send command */
 	SendCommand(ESP8266, ESP8266_COMMAND_CWSAP, NULL, NULL);
 	/* Return status */
@@ -2490,7 +2504,7 @@ void ParseReceived(ESP8266_t* ESP8266, char* Received, uint8_t from_usart_buffer
 		//Fixed this line
 		if (ESP8266->IPD.InPtr >= Conn->BytesReceived) {
 			/* Not in IPD anymore */
-			printf("GOT ALL BYTES\n");
+			//printf("GOT ALL BYTES\n");
 			ESP8266->IPD.InIPD = 0;
 			
 			/* Set package data size */

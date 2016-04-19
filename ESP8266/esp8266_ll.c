@@ -109,6 +109,8 @@ void UART4_IRQHandler(void){
 	/* Send received character to ESP stack */
 		ESP8266_DataReceived(&ch, 1);
 	}
+	if(USART_GetITStatus(UART4, USART_IT_ORE_RX) || USART_GetITStatus(UART4, USART_IT_ORE_ER)|| USART_GetITStatus(UART4, USART_IT_NE)|| USART_GetITStatus(UART4, USART_IT_FE)|| USART_GetITStatus(UART4, USART_IT_PE))
+		printf("INTERRUPT ERROR\n");
 }
 
 void init_ESP8266_reset(){
