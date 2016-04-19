@@ -97,13 +97,26 @@ void esp8266_update_func(){
 	ESP8266_Update(&wireless_S);
 }
 void sendToConnection(){
-	char temp[100] = "<html> <title> Temperature Stuff</title> <body> HORRAY THINGS </body> </html>";
 	if(reply){
+		char temp[400]; //= "Content-Type: text/html\r\nContent-Length: 111\r\n\r\n<html>\r\n<body>\r\n<h1>Happy New Millennium!</h1>\r\n(more file contents)\r\n  .\r\n  .\r\n  .\r\n</body>\r\n</html>";
+		char t0[100] = "<html> <title> Temperature Stuff</title> <body> HORRAY THINGS </body> </html>\n";
+		char t1[100] = "HTTP/1.1 200 OK\r\n";
+		char t2[100] = "Content-Type: text/html; chaset=mbc\r\n";
+		char t3[100];
+		sprintf(t3, "Content-Length: %d\r\n\r\n", strlen(t0));
+		//sprintf(temp, "%s%s%s",t2,t3,t0);
+		sprintf(temp, "%s%s%s%s",t1,t2,t3,t0);
+		printf("REPLY: %s\n",temp);
 		for(uint16_t i = 0; i<5; i ++){
 			if(wireless_S.Connection[i].Active){
+				//printf("%d\n",ESP8266_WaitReady(&wireless_S));
+				//#ESP8266_SendData(&wireless_S, &(wireless_S.Connection[i]),t1, strlen(t1));
 				printf("%d\n",ESP8266_WaitReady(&wireless_S));
 				ESP8266_SendData(&wireless_S, &(wireless_S.Connection[i]),temp, strlen(temp));
 				printf("Active Connection @ %d\n",i);
+				printf("%d\n",ESP8266_WaitReady(&wireless_S));
+				delay_ms(400);
+				printf("Closing the connection %d\n", ESP8266_CloseConnection(&wireless_S,&(wireless_S.Connection[i])));
 			}
 		}
 		reply = 0;
