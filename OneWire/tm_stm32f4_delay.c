@@ -56,10 +56,11 @@ void SysTick_Handler(void) {
 #endif
 
 	uint8_t i;
-	ESP8266_TimeUpdate(&wireless_S,1);
+	
 	TM_Time++;
 	//MY CODE
 	msTicks = TM_Time;	
+	ESP8266_TimeUpdate(&wireless_S,1);
 	//END MY CODE
 	if (TM_Time2 != 0x00) {
 		TM_Time2--;

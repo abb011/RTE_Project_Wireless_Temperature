@@ -1,11 +1,128 @@
 #include "wireless.h"
 
 uint16_t numConnections = 0;
-uint16_t reply = 0;
-void TM_USART1_ReceiveHandler(uint8_t c) {
-//Do your stuff here when byte is received
+uint16_t reply[ESP8266_MAX_CONNECTIONS];
+
+static ESP8266_t * wireless_S;
+static float * setpoint;
+static uint16_t homebase = 0;
+static void serverReply();
+static uint16_t initHBServer();
+static void initDataServer();
+static void dataReply();
+
+void initWireless(ESP8266_t *w, float * sp){
+	wireless_S = w;
+	setpoint = sp;
+	printf("Starting SP %f\n", *sp);
+	//Init a GPIO and read to see if it is homebase or not
+	GPIO_InitTypeDef GPIO_InitDef;
+	GPIO_InitDef.GPIO_Pin= GPIO_Pin_1;
+	GPIO_InitDef.GPIO_Mode = GPIO_Mode_IN;
+	GPIO_InitDef.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitDef.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_InitDef.GPIO_Speed = GPIO_Speed_100MHz;
+	GPIO_Init(GPIOA, &GPIO_InitDef);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
+	homebase = GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_1);
+	printf("Homebase %d\n", homebase);
+	if(homebase){
+		while(initHBServer());
+	}else{
+		initDataServer();
+	}
+}
+void sendToConnection(){
+	if (homebase){
+		serverReply();
+		return;
+	}
+	dataReply();
 }
 
+//Handles HTTP Processing
+static
+void serverReply(){
+	ESP8266_Connection_t * con;
+	for(uint i = 0; i<ESP8266_MAX_CONNECTIONS; i++){
+		con = &(wireless_S->Connection[i]);
+		if(reply[con->Number] && con->Active){
+			static char temp[4000]; //= "Content-Type: text/html\r\nContent-Length: 111\r\n\r\n<html>\r\n<body>\r\n<h1>Happy New Millennium!</h1>\r\n(more file contents)\r\n  .\r\n  .\r\n  .\r\n</body>\r\n</html>";
+			static char t1[100] = "HTTP/1.1 200 OK\r\n";
+			static char t0[1000];
+				if(reply[con->Number] == 1)
+					sprintf(t0,"<html> <title> Temperature Stuff</title> <body> Wifi Temperature Homepage </body>  <form action=\"set_temp.asp\">Current Set Point:%f New:<input type=\"text\" name=\"setpoint\">%cC<br><input type=\"submit\" value=\"Submit\"></form> </html>\n", *setpoint, (char)(176) );
+					//sprintf(t0,"<html> <title> Temperature Stuff</title> <body> Wifi Temperature Homepage </body>  <form action=\"set_temp.asp\">Current Set Point:%f New:<input type=\"text\" name=\"setpoint\">%cC<br><input type=\"submit\" value=\"Submit\"></form> </html>\n", (char)(176), *setpoint);
+				if(reply[con->Number]==2)
+					sprintf(t0,"<html> <title> Temperature Stuff</title> <body> You Submitted a New Setpoint: %f</body>  </html>\n", *setpoint);
+				if(reply[con->Number] ==3){
+					sprintf(t1, "HTTP/1.0 404 Not Found\r\n");
+					sprintf(t0,"<html> <title> Temperature Stuff</title> <body> 404 page not found. try/index.html </body>  </html>\n");
+				}
+			static char t2[100] = "Content-Type: text/html; chaset=mbc\r\n";
+			static char t3[100];
+			sprintf(t3, "Content-Length: %d\r\n\r\n", strlen(t0));
+			//sprintf(temp, "%s%s%s",t2,t3,t0);
+			sprintf(temp, "%s%s%s%s",t1,t2,t3,t0);
+			printf("REPLY: %s\n",temp);
+			
+			printf("%d\n",ESP8266_WaitReady(wireless_S));
+			ESP8266_SendData(wireless_S, con, temp, strlen(temp));
+			printf("Active Connection @ %d\n",i);
+			printf("%d\n",ESP8266_WaitReady(wireless_S));
+			//delay_ms(400);
+			printf("Closing the connection %d\n", ESP8266_CloseConnection(wireless_S,con));
+			printf("%d\n",ESP8266_WaitReady(wireless_S));
+			reply[con->Number] = 0;
+		}
+	}
+}
+
+
+
+uint16_t initHBServer(){
+	
+  ESP8266_APConfig_t ap_s;
+  ap_s.SSID = NETWORK_SSID;
+  ap_s.Pass = NETWORK_PWD;
+  ap_s.Ecn = ESP8266_Ecn_OPEN;
+  ap_s.Channel = 2;
+  ap_s.MaxConnections = 4; //Cannot be greater than 4
+  ap_s.Hidden = 0;
+  
+  ESP8266_Init(wireless_S, 115200);
+  printf("Initializing Wifi \n");
+  ESP8266_WaitReady(wireless_S);
+
+
+  ESP8266_WaitReady(wireless_S);
+  ESP8266_Result_t res = ESP8266_SetAP(wireless_S, &ap_s);
+  printf("Hosting a Wifi AccessPoint: %d\n", res);
+  
+  ESP8266_WaitReady(wireless_S);
+  
+  ESP8266_DELAYMS(wireless_S, 1000);
+  uint16_t port = 8000;
+  res = ESP8266_ServerEnable(wireless_S, port);
+  //while(res){
+	printf("Hosting a server at port %d: Success = 0: %d\n", port, res);
+//	 ESP8266_WaitReady(wireless_S);
+//	   res = ESP8266_ServerEnable(wireless_S, port);
+//  }
+  ESP8266_WaitReady(wireless_S);
+  return res;
+}
+
+void dataReply(){
+	
+}
+void initDataServer(){
+	//Connect to Host Access Point
+	
+	//Setup data Server
+	//Need to decide on message protocol
+	//Probably Stick with the HTTP GET and AP stuff So that we can test via the browser and ignore the port numnber its coming in on
+}
 
 // Call back functions that we must impliment
 
@@ -145,8 +262,25 @@ void ESP8266_Callback_ServerConnectionClosed(ESP8266_t* ESP8266, ESP8266_Connect
 void ESP8266_Callback_ServerConnectionDataReceived(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection, char* Buffer){
 		printf("Server received data\n %s", Buffer);
 		printf("Connection: %d.%d.%d.%d : %d\n",Connection->RemoteIP[0],Connection->RemoteIP[1],Connection->RemoteIP[2],Connection->RemoteIP[3], Connection->RemotePort );
-		printf("Connection @%d\n", Connection->Number);
-		reply = 1;
+		//printf("Connection @%d\n", Connection->Number);
+		reply[Connection->Number] =3;
+		char * stringStart =0;
+		stringStart = strstr(Buffer, GET_HOMEPAGE);
+		printf("STring STart %d\n", stringStart);
+		if(stringStart){
+			reply[Connection->Number] = 1;
+		}
+		stringStart = strstr(Buffer, SET_SP);
+		printf("STring STart %d : \n ", stringStart);
+		if(stringStart){
+			reply[Connection->Number] = 2;
+					float temp = 0.0;
+					char * stringEnd;
+					temp = strtof(stringStart +strlen(SET_SP), &stringEnd);
+					if((temp>0) && (temp<100))
+						*setpoint = temp;
+					printf("NEW SETPOINT = %f, %f\n", temp, *setpoint);
+		}
 		//ESP8266_WaitReady(ESP8266);
 
 		//ESP8266_RequestSendData(ESP8266, Connection);
