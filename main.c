@@ -100,6 +100,7 @@ void esp8266_update_func(){
 }
 int main(void)
 {
+	float sp = 5.0;
   // initialize
   
   SystemInit();
