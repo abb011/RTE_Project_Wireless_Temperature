@@ -51,7 +51,7 @@ uint8_t ESP8266_LL_USARTInit(uint32_t baudrate) {
 	
 	/* Configure USART2 Tx (PA.02) as alternate function push-pull */
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11 | GPIO_Pin_10;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
@@ -109,6 +109,24 @@ void UART4_IRQHandler(void){
 	/* Send received character to ESP stack */
 		ESP8266_DataReceived(&ch, 1);
 	}
+	if(USART_GetITStatus(UART4, USART_IT_ORE_RX) || USART_GetITStatus(UART4, USART_IT_ORE_ER)|| USART_GetITStatus(UART4, USART_IT_NE)|| USART_GetITStatus(UART4, USART_IT_FE)|| USART_GetITStatus(UART4, USART_IT_PE))
+		printf("INTERRUPT ERROR\n");
+}
+
+void init_ESP8266_reset(){
+	GPIO_InitTypeDef GPIO_InitDef;
+	GPIO_InitDef.GPIO_Pin= GPIO_Pin_12;
+	GPIO_InitDef.GPIO_Mode = GPIO_Mode_OUT;
+	GPIO_InitDef.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitDef.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_InitDef.GPIO_Speed = GPIO_Speed_100MHz;
+	GPIO_Init(GPIOC, &GPIO_InitDef);
+}
+void reset_low_ESP8266(){
+	GPIO_ResetBits(GPIOC, GPIO_Pin_12 );
+}
+void reset_high_ESP8266(){
+	GPIO_SetBits(GPIOC, GPIO_Pin_12 );
 }
 
 /*
