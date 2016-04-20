@@ -10,6 +10,7 @@ static void serverReply();
 static uint16_t initHBServer();
 static void initDataServer();
 static void dataReply();
+static uint16_t connectToBaseWIFI();
 
 void initWireless(ESP8266_t *w, float * sp){
 	wireless_S = w;
@@ -102,7 +103,7 @@ uint16_t initHBServer(){
   ESP8266_WaitReady(wireless_S);
   
   ESP8266_DELAYMS(wireless_S, 1000);
-  uint16_t port = 8000;
+  uint16_t port = HB_PORT;
   res = ESP8266_ServerEnable(wireless_S, port);
   //while(res){
 	printf("Hosting a server at port %d: Success = 0: %d\n", port, res);
@@ -113,13 +114,36 @@ uint16_t initHBServer(){
   return res;
 }
 
+
+//SECONARY POINT FUNCTIONS
+
 void dataReply(){
 	
 }
+
+
 void initDataServer(){
+	uint16_t i = 0;
 	//Connect to Host Access Point
+	ESP8266_Result_t res
+	do{
+		res = ESP8266_WifiConnect(wireless_S,NETWORK_SSID, ""/*NETWORK_PWD*/ ); //Password seems to not be working
+		ESP8266_WaitReady(wireless_S);
+	}while (res);
 	
+	ESP8266_DELAYMS(wireless_S, 1000);
+	uint16_t port = 4000;
+	res = 0;
+	do{
+		i++;
+		res = ESP8266_ServerEnable(wireless_S, port);
+		ESP8266_WaitReady(wireless_S);
+		if(i>10)
+			return 1;
+	}while
+	return 0;
 	//Setup data Server
+	
 	//Need to decide on message protocol
 	//Probably Stick with the HTTP GET and AP stuff So that we can test via the browser and ignore the port numnber its coming in on
 }
