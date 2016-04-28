@@ -93,9 +93,9 @@ extern "C" {
 #define LIB_FREE_FUNC          free
 #endif
 
-#ifndef BUFFER_FAST
-#define BUFFER_FAST            1
-#endif
+//#ifndef BUFFER_FAST
+//#define BUFFER_FAST            1
+//#endif
 
 /**
  * @}
