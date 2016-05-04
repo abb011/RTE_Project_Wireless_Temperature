@@ -90,25 +90,24 @@ uint16_t initHBServer(){
   ap_s.MaxConnections = 4; //Cannot be greater than 4
   ap_s.Hidden = 0;
   
-  ESP8266_Init(wireless_S, 115200);
-  printf("Initializing Wifi \n");
+ ESP8266_Result_t res=  ESP8266_Init(wireless_S, 115200);
+  printf("Initializing Wifi: %d \n",res);
   ESP8266_WaitReady(wireless_S);
 
-
+  ESP8266_DELAYMS(wireless_S, 1000);
   ESP8266_WaitReady(wireless_S);
-  ESP8266_Result_t res = ESP8266_SetAP(wireless_S, &ap_s);
-  printf("Hosting a Wifi AccessPoint: %d\n", res);
+  res = ESP8266_SetAP(wireless_S, &ap_s);
   
+  printf("Hosting a Wifi AccessPoint: %d\n", res);
   ESP8266_WaitReady(wireless_S);
   
   ESP8266_DELAYMS(wireless_S, 1000);
   uint16_t port = 8000;
   res = ESP8266_ServerEnable(wireless_S, port);
-  //while(res){
-	printf("Hosting a server at port %d: Success = 0: %d\n", port, res);
-//	 ESP8266_WaitReady(wireless_S);
+  printf("Hosting a server at port %d: Success = 0: %d\n", port, res);
+  //	 ESP8266_WaitReady(wireless_S);
 //	   res = ESP8266_ServerEnable(wireless_S, port);
-//  }
+//  }*/
   ESP8266_WaitReady(wireless_S);
   return res;
 }
@@ -260,7 +259,7 @@ void ESP8266_Callback_ServerConnectionClosed(ESP8266_t* ESP8266, ESP8266_Connect
  * \note   With weak parameter to prevent link errors if not defined by user
  */
 void ESP8266_Callback_ServerConnectionDataReceived(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection, char* Buffer){
-		printf("Server received data\n %s", Buffer);
+		printf("Server received data%d\n %s", strlen(Buffer), Buffer);
 		printf("Connection: %d.%d.%d.%d : %d\n",Connection->RemoteIP[0],Connection->RemoteIP[1],Connection->RemoteIP[2],Connection->RemoteIP[3], Connection->RemotePort );
 		//printf("Connection @%d\n", Connection->Number);
 		reply[Connection->Number] =3;

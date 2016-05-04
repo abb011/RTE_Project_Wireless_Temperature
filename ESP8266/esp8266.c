@@ -1534,6 +1534,8 @@ ESP8266_Result_t ESP8266_SNTPGetDateTime(ESP8266_t* ESP8266) {
 /******************************************/
 uint16_t ESP8266_DataReceived(uint8_t* ch, uint16_t count) {
 	/* Writes data to USART buffer */
+	if(count == 1) //This is added by alex
+		return BUFFER_Write_Byte(&USART_Buffer, *ch);
 	return BUFFER_Write(&USART_Buffer, ch, count);
 }
 
@@ -2494,7 +2496,7 @@ void ParseReceived(ESP8266_t* ESP8266, char* Received, uint8_t from_usart_buffer
 		if ((blength - ipd_ptr) >= Conn->BytesReceived) {
 			/* Add zero at the end of string */
 			Conn->Data[Conn->BytesReceived] = 0;
-			//printf("Have the Full message adding a 0\n");
+			printf("Have the Full message adding a 0\n %s", &Received[ipd_ptr]);
 		}
 		
 		/* Calculate remaining bytes */

@@ -112,7 +112,7 @@
  *
  *          This macro enables/disables functions for firmware updating
  */
-#define ESP8266_USE_FIRMWAREUPDATE                1
+#define ESP8266_USE_FIRMWAREUPDATE                0
 
 /**
  * @brief   Enables (1) or disables (0) feature to search network for Acces points
