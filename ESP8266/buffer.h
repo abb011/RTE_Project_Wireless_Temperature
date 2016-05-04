@@ -248,6 +248,8 @@ uint32_t BUFFER_ReadString(BUFFER_t* Buffer, char* buff, uint32_t buffsize);
  */
 int8_t BUFFER_CheckElement(BUFFER_t* Buffer, uint32_t pos, uint8_t* element);
 
+
+uint32_t BUFFER_Write_Byte(BUFFER_t* Buffer, uint8_t Data);
 /**
  * @}
  */

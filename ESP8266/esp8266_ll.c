@@ -109,6 +109,7 @@ void UART4_IRQHandler(void){
 	/* Send received character to ESP stack */
 		if(0==ESP8266_DataReceived(&ch, 1))
 			printf("MASSIVE ISSUE WITH BUFFER BEING FULL\n");
+		
 	}
 }
 
