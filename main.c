@@ -11,6 +11,7 @@
 #include "homework3.h"
 #include "misc.h"	
 #include "stm32f4xx_usart.h"
+#include "ESP8266/esp8266.h"
 
 #define MAX_STRLEN 32
 volatile char received_string[MAX_STRLEN+1];
@@ -82,17 +83,33 @@ void printAVGTemps(){
 	return;
 }
 
+
+
 float pitch, roll;
 uint32_t gesture_state=0;
 uint32_t announce_gesture = 0;
+ESP8266_t wireless_S;
+extern uint16_t numConnections;
+extern uint16_t * reply;
+
+
+
+void esp8266_update_func(){
+	ESP8266_Update(&wireless_S);
+	sendToConnection();
+}
 int main(void)
 {
+	float sp;
   // initialize
+  
   SystemInit();
   initialise_monitor_handles();
   init_systick();
   init_LED_pins();
   init_button();
+  
+  initWireless(&wireless_S, &sp);
   
   //Init the UARt
   //USART_Configuration();
@@ -101,16 +118,20 @@ int main(void)
   printf("%d\n", init_tempSensor());
   delay_ms(1000);
   float temp_C = getTemperature();
-  
   printf("The current Temperature is %f\n",temp_C);
 
   add_timed_task(storeTemperature, DS18B20_PERIOD);
   add_timed_task(printAVGTemps,4);
+  add_timed_task(esp8266_update_func, .25);
+  //add_timed_task(sendToConnection, .05);
+  
+  
   //add_timed_task(printstuff,0.5);
   
   
   while(1){
 	  run_TimedTasks();
+	  //ESP8266_Update(&wireless_S);
 	  
   }
 

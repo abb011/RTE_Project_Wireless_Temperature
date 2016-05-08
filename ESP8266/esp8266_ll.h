@@ -196,26 +196,29 @@ uint8_t ESP8266_LL_USARTInit(uint32_t baudrate);
  */
 uint8_t ESP8266_LL_USARTSend(uint8_t* data, uint16_t count);
 
+void init_ESP8266_reset();
+void reset_low_ESP8266();
+void reset_high_ESP8266();
 /**
  * @brief  Initializes reset pin on platform
  * @note   Function is called from ESP stack module when needed
  * @note   Declared as macro 
  */
-#define ESP8266_RESET_INIT    (void)0
+#define ESP8266_RESET_INIT    init_ESP8266_reset();
 	
 /**
  * @brief  Sets reset pin LOW
  * @note   Function is called from ESP stack module when needed
  * @note   Declared as macro 
  */
-#define ESP8266_RESET_LOW     (void)0
+#define ESP8266_RESET_LOW     reset_low_ESP8266();
 
 /**
  * @brief  Sets reset pin HIGH
  * @note   Function is called from ESP stack module when needed
  * @note   Declared as macro 
  */
-#define ESP8266_RESET_HIGH    (void)0
+#define ESP8266_RESET_HIGH    reset_high_ESP8266();
 
 /**
  * @}

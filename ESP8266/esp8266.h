@@ -91,7 +91,9 @@ extern "C" {
 /* This settings should not be modified */
 #define ESP8266_MAX_CONNECTIONS        5  /*!< Number of maximum active connections on ESP */
 #define ESP8266_MAX_CONNECTEDSTATIONS  10 /*!< Number of AP stations saved to received data array */
-
+/* Delay milliseconds */
+#define ESP8266_DELAYMS(ESP, x)        do {volatile uint32_t t = (ESP)->Time; while (((ESP)->Time - t) < (x));} while (0);
+#define CON_TIMEOUT 10000
 /* Check for GNUC */
 #ifndef __weak	
 #if defined (__GNUC__)	
@@ -119,14 +121,14 @@ extern "C" {
  */
 typedef enum {
 	ESP_OK = 0x00,          /*!< Everything is OK */
-	ESP_ERROR,              /*!< An error occurred */
-	ESP_DEVICENOTCONNECTED, /*!< Device is not connected to UART */
-	ESP_TIMEOUT,            /*!< Timeout was detected when sending command to ESP module */
-	ESP_LINKNOTVALID,       /*!< Link for connection is not valid */
-	ESP_NOHEAP,             /*!< Heap memory is not available */
-	ESP_WIFINOTCONNECTED,   /*!< Wifi is not connected to network */
-	ESP_BUSY,               /*!< Device is busy, new command is not possible */
-	ESP_INVALIDPARAMETERS   /*!< Parameters for functions are invalid */
+	ESP_ERROR = 0x01,              /*!< An error occurred */
+	ESP_DEVICENOTCONNECTED = 0x02, /*!< Device is not connected to UART */
+	ESP_TIMEOUT = 0x03,            /*!< Timeout was detected when sending command to ESP module */
+	ESP_LINKNOTVALID = 0x04,       /*!< Link for connection is not valid */
+	ESP_NOHEAP = 0x05,             /*!< Heap memory is not available */
+	ESP_WIFINOTCONNECTED= 0x06,   /*!< Wifi is not connected to network */
+	ESP_BUSY = 0x07,               /*!< Device is busy, new command is not possible */
+	ESP_INVALIDPARAMETERS = 0x08   /*!< Parameters for functions are invalid */
 } ESP8266_Result_t;
 
 /**
@@ -229,7 +231,7 @@ typedef struct {
 	void* UserParameters;        /*!< User parameters pointer. Useful when user wants to pass custom data which can later be used in callbacks */
 	uint8_t HeadersDone;         /*!< User option flag to set when headers has been found in response */
 	uint8_t FirstPacket;         /*!< Set to 1 when if first packet in connection received */
-	uint8_t LastActivity;        /*!< Connection last activity time */
+	uint32_t LastActivity;        /*!< Connection last activity time */
 } ESP8266_Connection_t;
 
 /**
@@ -392,6 +394,10 @@ typedef struct {
  * \{
  */
 
+ 
+ /** Custom send data function*/
+ ESP8266_Result_t ESP8266_SendData(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection, uint8_t* data, uint16_t data_n);
+ 
 /**
  * \brief  Initializes ESP8266 module
  * \param  *ESP8266: Pointer to working \ref ESP8266_t structure
@@ -1124,6 +1130,8 @@ void ESP8266_Callback_SNTPOk(ESP8266_t* ESP8266, ESP8266_SNTP_t* SNTP);
  */
 void ESP8266_Callback_SNTPError(ESP8266_t* ESP8266);
 
+
+void ESP8266_Callback_Connection_Timeout(ESP8266_t * ESP8266, ESP8266_Connection_t * Connection);
 /**
  * \}
  */

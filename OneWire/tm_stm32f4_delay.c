@@ -16,7 +16,12 @@
  * | along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * |----------------------------------------------------------------------
  */
+ 
+
 #include "tm_stm32f4_delay.h"
+#include "../ESP8266/esp8266.h"
+
+extern ESP8266_t wireless_S;
 
 __IO uint32_t TM_TimingDelay = 0;
 __IO uint32_t TM_Time = 0;
@@ -55,6 +60,7 @@ void SysTick_Handler(void) {
 	TM_Time++;
 	//MY CODE
 	msTicks = TM_Time;	
+	ESP8266_TimeUpdate(&wireless_S,1);
 	//END MY CODE
 	if (TM_Time2 != 0x00) {
 		TM_Time2--;
