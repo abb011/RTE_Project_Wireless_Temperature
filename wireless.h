@@ -5,7 +5,7 @@
 #define GET_HOMEPAGE "GET /index.html "
 #define SET_SP "GET /set_temp.asp?setpoint="
 #define NETWORK_SSID "HomeAutomation"
-#define NETWORK_PWD "" //"password1234567890"
+#define NETWORK_PWD ""
 
 
 void sendToConnection();

@@ -1003,10 +1003,10 @@ ESP8266_Result_t ESP8266_WifiConnect(ESP8266_t* ESP8266, const char* ssid, const
 	ESP8266_CHECK_IDLE(ESP8266);
 	
 	/* Send commands separate with escape strings */
-	ESP8266_USARTSENDSTRING("AT+CWJAP_CUR=\"");
-	EscapeStringAndSend((char *)ssid);
+	ESP8266_USARTSENDSTRING("AT+CWJAP=\"");
+	ESP8266_USARTSENDSTRING((char *)ssid);
 	ESP8266_USARTSENDSTRING("\",\"");
-	EscapeStringAndSend((char *)pass);
+	ESP8266_USARTSENDSTRING((char *)pass);
 	ESP8266_USARTSENDSTRING("\"\r\n");
 	
 	/* Send command */
