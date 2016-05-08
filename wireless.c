@@ -126,8 +126,34 @@ void dataReply(){
 	
 }
 void initDataServer(){
-	//Connect to Host Access Point
+	printf("Being Called Right Now \n");
+	ESP8266_Result_t temp = 1;
+	temp=ESP8266_Init(wireless_S, 115200);
+    printf("Initializing Wifi: %d \n",temp);
+    ESP8266_WaitReady(wireless_S);
+do {
+	ESP8266_WaitReady(wireless_S);
+	temp = ESP8266_WifiConnect(wireless_S, NETWORK_SSID, "");
+	printf("The SSID is: - %s, %d \n", NETWORK_SSID, temp);
 	
+	}
+	
+while (temp);
+
+do {
+ESP8266_WaitReady(wireless_S);
+  
+  ESP8266_DELAYMS(wireless_S, 1000);
+  uint16_t port = 8000;
+  temp = ESP8266_ServerEnable(wireless_S, port);
+  printf("Hosting a server at port %d: Success = 0: %d\n", port, temp);
+  
+}  
+while(temp);
+ESP8266_WaitReady(wireless_S);  ESP8266_DELAYMS(wireless_S, 1000);
+ESP8266_GetSTAIP(wireless_S);
+ESP8266_WaitReady(wireless_S);  ESP8266_DELAYMS(wireless_S, 1000);
+ESP8266_Callback_WifiConnected(wireless_S);	
 	//Setup data Server
 	//Need to decide on message protocol
 	//Probably Stick with the HTTP GET and AP stuff So that we can test via the browser and ignore the port numnber its coming in on
@@ -175,7 +201,7 @@ void ESP8266_Callback_WifiDisconnected(ESP8266_t* ESP8266){
  * \note   With weak parameter to prevent link errors if not defined by user
  */
 void ESP8266_Callback_WifiConnected(ESP8266_t* ESP8266){
-	printf("Wifi Connected\n");
+	printf("Wifi Connected %d.%d.%d.%d \n", ESP8266->STAIP[0],ESP8266->STAIP[1],ESP8266->STAIP[2],ESP8266->STAIP[3]);
 	
 }
 
