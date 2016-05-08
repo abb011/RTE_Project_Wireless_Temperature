@@ -93,7 +93,7 @@ extern "C" {
 #define ESP8266_MAX_CONNECTEDSTATIONS  10 /*!< Number of AP stations saved to received data array */
 /* Delay milliseconds */
 #define ESP8266_DELAYMS(ESP, x)        do {volatile uint32_t t = (ESP)->Time; while (((ESP)->Time - t) < (x));} while (0);
-
+#define CON_TIMEOUT 10000
 /* Check for GNUC */
 #ifndef __weak	
 #if defined (__GNUC__)	
@@ -231,7 +231,7 @@ typedef struct {
 	void* UserParameters;        /*!< User parameters pointer. Useful when user wants to pass custom data which can later be used in callbacks */
 	uint8_t HeadersDone;         /*!< User option flag to set when headers has been found in response */
 	uint8_t FirstPacket;         /*!< Set to 1 when if first packet in connection received */
-	uint8_t LastActivity;        /*!< Connection last activity time */
+	uint32_t LastActivity;        /*!< Connection last activity time */
 } ESP8266_Connection_t;
 
 /**
@@ -1130,6 +1130,8 @@ void ESP8266_Callback_SNTPOk(ESP8266_t* ESP8266, ESP8266_SNTP_t* SNTP);
  */
 void ESP8266_Callback_SNTPError(ESP8266_t* ESP8266);
 
+
+void ESP8266_Callback_Connection_Timeout(ESP8266_t * ESP8266, ESP8266_Connection_t * Connection);
 /**
  * \}
  */

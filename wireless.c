@@ -2,6 +2,7 @@
 
 uint16_t numConnections = 0;
 uint16_t reply[ESP8266_MAX_CONNECTIONS];
+uint16_t timed_out[ESP8266_MAX_CONNECTIONS];
 
 static ESP8266_t * wireless_S;
 static float * setpoint;
@@ -12,6 +13,9 @@ static void initDataServer();
 static void dataReply();
 
 void initWireless(ESP8266_t *w, float * sp){
+	for(uint8_t i = 0; i<ESP8266_MAX_CONNECTIONS; i++){
+		timed_out[i] = 0;
+	}
 	wireless_S = w;
 	setpoint = sp;
 	printf("Starting SP %f\n", *sp);
@@ -33,6 +37,12 @@ void initWireless(ESP8266_t *w, float * sp){
 	}
 }
 void sendToConnection(){
+	for(uint8_t i = 0; i < ESP8266_MAX_CONNECTIONS; i++){
+		if(timed_out[i]){
+			printf("Closing Connection: %d\n", ESP8266_CloseConnection(wireless_S, &(wireless_S->Connection[i])));
+			timed_out[i] = 0;
+		}
+	}
 	if (homebase){
 		serverReply();
 		return;
@@ -233,6 +243,7 @@ void ESP8266_Callback_WifiDetected(ESP8266_t* ESP8266, ESP8266_APs_t* ESP8266_AP
 void ESP8266_Callback_ServerConnectionActive(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection){
 	numConnections++;
 	printf("Received a new Server Connection @ %d\n", Connection->Number);
+	timed_out[Connection->Number] = 0;
 	//ESP8266_WaitReady(ESP8266);
 	//printf("ESP is ready again\n");
 }
@@ -259,6 +270,7 @@ void ESP8266_Callback_ServerConnectionClosed(ESP8266_t* ESP8266, ESP8266_Connect
  * \note   With weak parameter to prevent link errors if not defined by user
  */
 void ESP8266_Callback_ServerConnectionDataReceived(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection, char* Buffer){
+		timed_out[Connection->Number]=0;
 		printf("Server received data%d\n %s", strlen(Buffer), Buffer);
 		printf("Connection: %d.%d.%d.%d : %d\n",Connection->RemoteIP[0],Connection->RemoteIP[1],Connection->RemoteIP[2],Connection->RemoteIP[3], Connection->RemotePort );
 		//printf("Connection @%d\n", Connection->Number);
@@ -303,6 +315,13 @@ uint16_t ESP8266_Callback_ServerConnectionSendData(ESP8266_t* ESP8266, ESP8266_C
 		Buffer[i] = temp[i];
 
 	return numBytes;
+}
+
+void ESP8266_Callback_Connection_Timeout(ESP8266_t * ESP8266, ESP8266_Connection_t * Connection){
+	printf("Connection Timedout!!!: %d\n", Connection->Number);
+	ESP8266->ActiveCommand = 0;
+	(ESP8266->IPD).InIPD = 0;
+	timed_out[Connection->Number] = 1;
 }
 
 /**
