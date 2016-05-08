@@ -76,8 +76,8 @@ void BUFFER_Free(BUFFER_t* Buffer) {
 	Buffer->Size = 0;
 }
 uint32_t BUFFER_Write_Byte(BUFFER_t* Buffer, uint8_t Data){
-	if (Buffer == NULL)
-		return 0;
+	//if (Buffer == NULL)
+	//	return 0;
 	Buffer->Buffer[Buffer->In] = Data;
 	Buffer->In = (Buffer->In+1)%(Buffer->Size);
 	return 1;
