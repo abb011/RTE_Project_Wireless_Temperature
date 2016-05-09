@@ -193,6 +193,7 @@ do {                                                        \
 	(conn)->Client = 0;                                     \
 	(conn)->FirstPacket = 0;                                \
 	(conn)->HeadersDone = 0;                                \
+	(conn)->LastActivity = 0;								\
 } while (0);                                                
 
 /* Wait and return from function with operation status */
@@ -468,7 +469,7 @@ ESP8266_Result_t ESP8266_Sleep(ESP8266_t* ESP8266, uint32_t Milliseconds) {
 }
 
 ESP8266_Result_t ESP8266_Update(ESP8266_t* ESP8266) {
-	char Received[2048];
+	char Received[128];
 	char ch;
 	uint8_t lastcmd;
 	uint16_t stringlength;
@@ -494,6 +495,14 @@ ESP8266_Result_t ESP8266_Update(ESP8266_t* ESP8266) {
 			/* Call user function */
 			ESP8266_Callback_ClientConnectionTimeout(ESP8266, &ESP8266->Connection[ESP8266->StartConnectionSent]);
 		}
+	}
+	//Check Connection Timeout
+	ESP8266_Connection_t *  conTemp;
+	for(uint8_t i =0; i < ESP8266_MAX_CONNECTIONS; i++){
+		conTemp = &(ESP8266->Connection[i]);
+		if(conTemp->Active && conTemp->LastActivity && ((ESP8266->Time - conTemp->LastActivity)>=CON_TIMEOUT))
+			ESP8266_Callback_Connection_Timeout(ESP8266, conTemp);
+			
 	}
 	
 	/* We are waiting to send data */
@@ -785,7 +794,7 @@ ESP8266_Result_t ESP8266_SendData(ESP8266_t* ESP8266, ESP8266_Connection_t* Conn
 ESP8266_Result_t ESP8266_CloseConnection(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection) {
 	/* Check idle state */
 	ESP8266_CHECK_IDLE(ESP8266);
-		
+	Connection->Active = 0;
 	/* Go to ASCII */
 	Connection->Number += '0';
 	
@@ -1534,6 +1543,8 @@ ESP8266_Result_t ESP8266_SNTPGetDateTime(ESP8266_t* ESP8266) {
 /******************************************/
 uint16_t ESP8266_DataReceived(uint8_t* ch, uint16_t count) {
 	/* Writes data to USART buffer */
+	if(count == 1) //This is added by alex
+		return BUFFER_Write_Byte(&USART_Buffer, *ch);
 	return BUFFER_Write(&USART_Buffer, ch, count);
 }
 
@@ -1547,6 +1558,10 @@ __weak void ESP8266_Callback_DeviceReady(ESP8266_t* ESP8266) {
 	*/
 }
 
+//Connection Timeout implimented by us.
+__weak void ESP8266_Callback_Connection_Timeout(ESP8266_t * ESP8266, ESP8266_Connection_t * Connection){
+	
+}
 /* Called when watchdog reset on ESP8266 is detected */
 __weak void ESP8266_Callback_WatchdogReset(ESP8266_t* ESP8266) {
 	/* NOTE: This function Should not be modified, when the callback is needed,
@@ -2338,6 +2353,7 @@ void ParseReceived(ESP8266_t* ESP8266, char* Received, uint8_t from_usart_buffer
 		Conn = &ESP8266->Connection[CHAR2NUM(*(ch_ptr - 1))];
 		Conn->Active = 1;
 		Conn->Number = CHAR2NUM(*(ch_ptr - 1));
+		Conn->LastActivity = ESP8266->Time;
 		
 		/* Call user function according to connection type (client, server) */
 		if (Conn->Client) {			
@@ -2422,7 +2438,7 @@ void ParseReceived(ESP8266_t* ESP8266, char* Received, uint8_t from_usart_buffer
 		
 		/* Get connection number from IPD statement */
 		ESP8266->IPD.ConnNumber = CHAR2NUM(Received[ipd_ptr]);
-		
+		ESP8266->Connection[ESP8266->IPD.ConnNumber].LastActivity = ESP8266->Time;
 		/* Save connection pointer */
 		Conn = &ESP8266->Connection[ESP8266->IPD.ConnNumber];
 		
@@ -2494,7 +2510,7 @@ void ParseReceived(ESP8266_t* ESP8266, char* Received, uint8_t from_usart_buffer
 		if ((blength - ipd_ptr) >= Conn->BytesReceived) {
 			/* Add zero at the end of string */
 			Conn->Data[Conn->BytesReceived] = 0;
-			//printf("Have the Full message adding a 0\n");
+			printf("Have the Full message adding a 0\n %s", &Received[ipd_ptr]);
 		}
 		
 		/* Calculate remaining bytes */

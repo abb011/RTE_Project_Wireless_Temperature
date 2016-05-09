@@ -75,7 +75,13 @@ void BUFFER_Free(BUFFER_t* Buffer) {
 	Buffer->Flags = 0;
 	Buffer->Size = 0;
 }
-
+uint32_t BUFFER_Write_Byte(BUFFER_t* Buffer, uint8_t Data){
+	//if (Buffer == NULL)
+	//	return 0;
+	Buffer->Buffer[Buffer->In] = Data;
+	Buffer->In = (Buffer->In+1)%(Buffer->Size);
+	return 1;
+}
 uint32_t BUFFER_Write(BUFFER_t* Buffer, uint8_t* Data, uint32_t count) {
 	uint32_t i = 0;
 	uint32_t free;

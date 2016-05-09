@@ -10,5 +10,7 @@
 #define TEMPERATURE_REPLY_FORMAT "GET /read_temp.asp?temperature=%f/source.asp?=%d"
 #define HB_PORT 8000
 #define SEC_PORT 4000
+
+
 void sendToConnection();
 void initWireless(ESP8266_t *w, float * sp);

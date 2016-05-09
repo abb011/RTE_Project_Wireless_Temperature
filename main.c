@@ -100,7 +100,9 @@ void esp8266_update_func(){
 }
 int main(void)
 {
-	float sp = 5.0;
+
+
+	float sp;
   // initialize
   
   SystemInit();
@@ -121,8 +123,8 @@ int main(void)
   printf("The current Temperature is %f\n",temp_C);
 
   add_timed_task(storeTemperature, DS18B20_PERIOD);
-  //add_timed_task(printAVGTemps,4);
-  add_timed_task(esp8266_update_func, .2);
+  add_timed_task(printAVGTemps,4);
+  add_timed_task(esp8266_update_func, .25);
   //add_timed_task(sendToConnection, .05);
   
   
