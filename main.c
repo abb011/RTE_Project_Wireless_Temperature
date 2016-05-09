@@ -98,11 +98,14 @@ void esp8266_update_func(){
 	ESP8266_Update(&wireless_S);
 	sendToConnection();
 }
+
+#define NUM_ELEMENTS 10
 int main(void)
 {
 
 
-	float sp;
+  float sp, local_temperature;
+  float temperature_array[NUM_ELEMENTS];
   // initialize
   
   SystemInit();
@@ -111,7 +114,7 @@ int main(void)
   init_LED_pins();
   init_button();
   
-  initWireless(&wireless_S, &sp);
+  initWireless(&wireless_S, &sp, &local_temperature, &temperature_array, NUM_ELEMENTS);
   
   //Init the UARt
   //USART_Configuration();
@@ -123,7 +126,7 @@ int main(void)
   printf("The current Temperature is %f\n",temp_C);
 
   add_timed_task(storeTemperature, DS18B20_PERIOD);
-  add_timed_task(printAVGTemps,4);
+  //add_timed_task(printAVGTemps,4);
   add_timed_task(esp8266_update_func, .25);
   //add_timed_task(sendToConnection, .05);
   
