@@ -123,11 +123,11 @@ uint16_t initHBServer(){
   
 	ESP8266_DELAYMS(wireless_S, 1000);
 	uint16_t port = HB_PORT;
-	do{
+	//do{
 		res = ESP8266_ServerEnable(wireless_S, port);
 		printf("Hosting a server at port %d: Success = 0: %d\n", port, res);
 		ESP8266_WaitReady(wireless_S);
-	} while(res);
+	//} while(res);
 	
 	return res;
 }
