@@ -100,17 +100,17 @@ uint16_t initHBServer(){
   ap_s.Channel = 2;
   ap_s.MaxConnections = 4; //Cannot be greater than 4
   ap_s.Hidden = 0;
-  
+  ESP8266_Result_t res;
 	do{
-		temp=ESP8266_Init(wireless_S, 115200);
-		printf("Initializing Wifi: %d \n",temp);
+		res=ESP8266_Init(wireless_S, 115200);
+		printf("Initializing Wifi: %d \n",res);
 		ESP8266_WaitReady(wireless_S);
-	}while(temp);
+	}while(res);
 
 	do{
 		res = ESP8266_SetMode(wireless_S,ESP8266_Mode_AP );
 		ESP8266_WaitReady(wireless_S);
-	while(res);
+	}while(res);
 	
 	ESP8266_DELAYMS(wireless_S, 1000);
 	res = ESP8266_WaitReady(wireless_S);
@@ -145,9 +145,9 @@ void initDataServer(){
 	}while(temp);
 	
 	do{
-		tem[ = ESP8266_SetMode(wireless_S,ESP8266_Mode_STA );
+		temp = ESP8266_SetMode(wireless_S,ESP8266_Mode_STA );
 		ESP8266_WaitReady(wireless_S);
-	while(temp);
+	}while(temp);
 	do {
 		ESP8266_WaitReady(wireless_S);
 		temp = ESP8266_WifiConnect(wireless_S, NETWORK_SSID, "");
