@@ -6,8 +6,8 @@
 #define SET_SP "GET /set_temp.asp?setpoint="
 #define NETWORK_SSID "HomeAutomation"
 #define NETWORK_PWD "password1234567890"
-#define TEMPERATURE_RQ_HEADER "GET /read_temp.asp?temperature="
-#define TEMPERATURE_RQ_TAIL "/end\r\n"				/** Note needs to contain \n for immidiate processing. */
+#define TEMPERATURE_REQ "GET /read_temp.asp?temperature="
+#define TEMPERATURE_REPLY_FORMAT "GET /read_temp.asp?temperature=%f/source.asp?=%d"
 #define HB_PORT 8000
 #define SEC_PORT 4000
 void sendToConnection();

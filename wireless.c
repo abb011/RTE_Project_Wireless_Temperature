@@ -90,6 +90,7 @@ void serverReply(){
 
 
 
+//Need to put initwifi into a while loop, potentially trying setting it to Accesspoint only mode.
 uint16_t initHBServer(){
 	
   ESP8266_APConfig_t ap_s;
@@ -100,26 +101,35 @@ uint16_t initHBServer(){
   ap_s.MaxConnections = 4; //Cannot be greater than 4
   ap_s.Hidden = 0;
   
- ESP8266_Result_t res=  ESP8266_Init(wireless_S, 115200);
-  printf("Initializing Wifi: %d \n",res);
-  ESP8266_WaitReady(wireless_S);
+	do{
+		temp=ESP8266_Init(wireless_S, 115200);
+		printf("Initializing Wifi: %d \n",temp);
+		ESP8266_WaitReady(wireless_S);
+	}while(temp);
 
-  ESP8266_DELAYMS(wireless_S, 1000);
-  ESP8266_WaitReady(wireless_S);
-  res = ESP8266_SetAP(wireless_S, &ap_s);
+	do{
+		res = ESP8266_SetMode(wireless_S,ESP8266_Mode_AP );
+		ESP8266_WaitReady(wireless_S);
+	while(res);
+	
+	ESP8266_DELAYMS(wireless_S, 1000);
+	res = ESP8266_WaitReady(wireless_S);
+	
+	do{
+	  res = ESP8266_SetAP(wireless_S, &ap_s);
+	  printf("Hosting a Wifi AccessPoint: %d\n", res);
+	  ESP8266_WaitReady(wireless_S);
+	}while(res);
   
-  printf("Hosting a Wifi AccessPoint: %d\n", res);
-  ESP8266_WaitReady(wireless_S);
-  
-  ESP8266_DELAYMS(wireless_S, 1000);
-  uint16_t port = 8000;
-  res = ESP8266_ServerEnable(wireless_S, port);
-  printf("Hosting a server at port %d: Success = 0: %d\n", port, res);
-  //	 ESP8266_WaitReady(wireless_S);
-//	   res = ESP8266_ServerEnable(wireless_S, port);
-//  }*/
-  ESP8266_WaitReady(wireless_S);
-  return res;
+	ESP8266_DELAYMS(wireless_S, 1000);
+	uint16_t port = HB_PORT;
+	do{
+		res = ESP8266_ServerEnable(wireless_S, port);
+		printf("Hosting a server at port %d: Success = 0: %d\n", port, res);
+		ESP8266_WaitReady(wireless_S);
+	} while(res);
+	
+	return res;
 }
 
 void dataReply(){
@@ -129,38 +139,36 @@ void initDataServer(){
 	printf("Being Called Right Now \n");
 	ESP8266_Result_t temp = 1;
 	do{
-	temp=ESP8266_Init(wireless_S, 115200);
-    printf("Initializing Wifi: %d \n",temp);
-    ESP8266_WaitReady(wireless_S);
+		temp=ESP8266_Init(wireless_S, 115200);
+		printf("Initializing Wifi: %d \n",temp);
+		ESP8266_WaitReady(wireless_S);
 	}while(temp);
 	
-	ESP8266_SetMode(wireless_S,ESP8266_Mode_STA );
-	ESP8266_WaitReady(wireless_S);
-do {
-	ESP8266_WaitReady(wireless_S);
-	temp = ESP8266_WifiConnect(wireless_S, NETWORK_SSID, "");
-	printf("The SSID is: - %s, %d \n", NETWORK_SSID, temp);
-	
+	do{
+		tem[ = ESP8266_SetMode(wireless_S,ESP8266_Mode_STA );
+		ESP8266_WaitReady(wireless_S);
+	while(temp);
+	do {
+		ESP8266_WaitReady(wireless_S);
+		temp = ESP8266_WifiConnect(wireless_S, NETWORK_SSID, "");
+		printf("The SSID is: - %s, %d \n", NETWORK_SSID, temp);
 	}while (temp);
 
-ESP8266_WaitReady(wireless_S);  ESP8266_DELAYMS(wireless_S, 1000);
-ESP8266_GetSTAIP(wireless_S);
-ESP8266_WaitReady(wireless_S);  ESP8266_DELAYMS(wireless_S, 1000);
 
-do {
-ESP8266_WaitReady(wireless_S);
-  
-  ESP8266_DELAYMS(wireless_S, 1000);
-  uint16_t port = 8000;
-  temp = ESP8266_ServerEnable(wireless_S, port);
-  printf("Hosting a server at port %d: Success = 0: %d\n", port, temp);
-  
-} while(temp);
 
-ESP8266_Callback_WifiConnected(wireless_S);	
-	//Setup data Server
-	//Need to decide on message protocol
-	//Probably Stick with the HTTP GET and AP stuff So that we can test via the browser and ignore the port numnber its coming in on
+	do {
+		ESP8266_WaitReady(wireless_S);
+		ESP8266_DELAYMS(wireless_S, 1000);
+		uint16_t port = SEC_PORT;
+		temp = ESP8266_ServerEnable(wireless_S, port);
+		printf("Hosting a server at port %d: Success = 0: %d\n", port, temp);
+	} while(temp);
+
+	do{
+		ESP8266_WaitReady(wireless_S);  ESP8266_DELAYMS(wireless_S, 1000);
+		temp =ESP8266_GetSTAIP(wireless_S);
+		ESP8266_WaitReady(wireless_S);  ESP8266_DELAYMS(wireless_S, 1000);	
+	}while(temp);
 }
 
 // Call back functions that we must impliment
