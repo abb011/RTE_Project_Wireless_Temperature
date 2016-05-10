@@ -239,7 +239,7 @@ static void HBParseRequest(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection,
 				float temp = 0.0;
 				char ip[20];
 				char * stringEnd;
-				sscanf(TEMPERATURE_REPLY_FORMAT, &temp, ip);
+				sscanf(stringStart, TEMPERATURE_REPLY_FORMAT, &temp, ip);
 				printf("NEW Temperature = %f, %s\n", temp, ip);
 	}
 	
