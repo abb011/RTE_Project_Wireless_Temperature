@@ -535,6 +535,7 @@ void ESP8266_Callback_ClientConnectionDataSentError(ESP8266_t* ESP8266, ESP8266_
  * \note   With weak parameter to prevent link errors if not defined by user
  */
 void ESP8266_Callback_ClientConnectionDataReceived(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection, char* Buffer){
+	printf("Received %s\n", Buffer);
 	if(homebase){
 		HBParseRequest(ESP8266, Connection, Buffer);
 		return;
