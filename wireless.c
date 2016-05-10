@@ -7,13 +7,18 @@
 #define NEW_SETPOINT 2
 #define BAD_REQUEST  3
 #define NEW_TEMPERATURE 4
+#define NOT_CONNECTED 0
+#define WIFI_CONNECTED 1
 
 uint16_t numConnections = 0;
 uint16_t reply[ESP8266_MAX_CONNECTIONS];
 float ** temperature_array;
 uint16_t timed_out[ESP8266_MAX_CONNECTIONS];
 uint16_t temp_array_size;
-static char ip_addr[20] = "";
+static char ip_addr[20];
+
+uint8_t wifi_status = NOT_CONNECTED;
+
 
 static ESP8266_t * wireless_S;
 static float * setpoint;
@@ -111,6 +116,7 @@ uint16_t initHBServer(){
 
 
 void initDataServer(){
+	ip_addr[0] = 0;
 	printf("Being Called Right Now \n");
 	ESP8266_Result_t temp = 1;
 	do{
@@ -129,21 +135,25 @@ void initDataServer(){
 		printf("The SSID is: - %s, %d \n", NETWORK_SSID, temp);
 	}while (temp);
 
+	while(ip_addr[0]==0){
+		ESP8266_WaitReady(wireless_S);
+		printf("Delaying until we have IP address\n");
+		ESP8266_DELAYMS(wireless_S, 1000);
+	}
 
+	do{
+		ESP8266_WaitReady(wireless_S);
+		ESP8266_SetMux(wireless_S, 1);
 
+	}while(temp);
+	
+	uint16_t port = SEC_PORT;
 	do {
 		ESP8266_WaitReady(wireless_S);
-		ESP8266_DELAYMS(wireless_S, 1000);
-		uint16_t port = SEC_PORT;
 		temp = ESP8266_ServerEnable(wireless_S, port);
 		printf("Hosting a server at port %d: Success = 0: %d\n", port, temp);
 	} while(temp);
 
-	do{
-		ESP8266_WaitReady(wireless_S);  ESP8266_DELAYMS(wireless_S, 1000);
-		temp =ESP8266_GetSTAIP(wireless_S);
-		ESP8266_WaitReady(wireless_S);  ESP8266_DELAYMS(wireless_S, 1000);	
-	}while(temp);
 }
 
 
@@ -246,6 +256,7 @@ static void HBParseRequest(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection,
 }
 
 static void DataServerParseRequest(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection, char* Buffer){
+	printf("Server received data%d\n %s", strlen(Buffer), Buffer);
 	timed_out[Connection->Number] = 0;
 	reply[Connection->Number] = BAD_REQUEST;
 	if(0==strcmp(Buffer,TEMPERATURE_REQ)){
@@ -284,7 +295,8 @@ void ESP8266_Callback_WatchdogReset(ESP8266_t* ESP8266){
  * \note   With weak parameter to prevent link errors if not defined by user
  */
 void ESP8266_Callback_WifiDisconnected(ESP8266_t* ESP8266){
-	printf("WIFI Disconnect\n");
+	wifi_status = NOT_CONNECTED;
+	ip_addr[0] = 0;
 }
 
 /**
@@ -295,7 +307,7 @@ void ESP8266_Callback_WifiDisconnected(ESP8266_t* ESP8266){
  */
 void ESP8266_Callback_WifiConnected(ESP8266_t* ESP8266){
 	printf("Wifi Connected %d.%d.%d.%d \n", ESP8266->STAIP[0],ESP8266->STAIP[1],ESP8266->STAIP[2],ESP8266->STAIP[3]);
-	
+
 }
 
 /**
@@ -310,13 +322,21 @@ void ESP8266_Callback_WifiConnectFailed(ESP8266_t* ESP8266){
 }
 
 /**
- * \brief  Device has received IP address as station (when connected to another access point) from connected access point (AP)
+ * \brief  Device has received IP addressreceived IP address as station (when connected to another access point) from connected access point (AP)
  * \param  *ESP8266: Pointer to working \ref ESP8266_t structure
  * \retval None
  * \note   With weak parameter to prevent link errors if not defined by user
  */
 void ESP8266_Callback_WifiGotIP(ESP8266_t* ESP8266){
-	printf("Received IP Address %hu.%hu.%hu.%hu\n",ESP8266->STAIP[0],ESP8266->STAIP[1],ESP8266->STAIP[2],ESP8266->STAIP[3]);
+	//printf("Received IP Address %hu.%hu.%hu.%hu\n",ESP8266->STAIP[0],ESP8266->STAIP[1],ESP8266->STAIP[2],ESP8266->STAIP[3]);
+	printf("Wifi Connected, getting IP address\n");
+	ESP8266_Result_t temp;
+	do{
+		ESP8266_WaitReady(wireless_S);  
+		temp = ESP8266_GetSTAIP(wireless_S);
+		ESP8266_WaitReady(wireless_S); 
+		printf("Getting IP result %d\n", temp);
+	}while(temp);
 }
  
 /**
