@@ -84,11 +84,11 @@ uint16_t initHBServer(){
 		ESP8266_WaitReady(wireless_S);
 	}while(res);
 
-	do{
+	/*do{
 		res = ESP8266_SetMode(wireless_S,ESP8266_Mode_AP );
 		ESP8266_WaitReady(wireless_S);
 	}while(res);
-	
+	*/
 	ESP8266_DELAYMS(wireless_S, 1000);
 	res = ESP8266_WaitReady(wireless_S);
 	
@@ -390,7 +390,10 @@ void ESP8266_Callback_ServerConnectionClosed(ESP8266_t* ESP8266, ESP8266_Connect
  * \note   With weak parameter to prevent link errors if not defined by user
  */
 void ESP8266_Callback_ServerConnectionDataReceived(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection, char* Buffer){
-		
+	if(homebase){
+		return HBParseRequest(ESP8266, Connection, Buffer);
+	}
+	return DataServerParseRequest(ESP8266, Connection, Buffer);
 }
 
 /**
@@ -536,11 +539,11 @@ void ESP8266_Callback_ClientConnectionDataSentError(ESP8266_t* ESP8266, ESP8266_
  */
 void ESP8266_Callback_ClientConnectionDataReceived(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection, char* Buffer){
 	printf("Received %s\n", Buffer);
-	if(homebase){
+	/*if(homebase){
 		HBParseRequest(ESP8266, Connection, Buffer);
 		return;
 	}
-	DataServerParseRequest(ESP8266, Connection, Buffer);
+	DataServerParseRequest(ESP8266, Connection, Buffer);*/
 	
 }
 

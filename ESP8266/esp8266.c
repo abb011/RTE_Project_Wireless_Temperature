@@ -3052,7 +3052,6 @@ ESP8266_Result_t SendMACCommand(ESP8266_t* ESP8266, uint8_t* addr, const char* c
 static
 void CallConnectionCallbacks(ESP8266_t* ESP8266) {
 	uint8_t conn_number;
-	
 	/* Check if there are any pending data to be sent to connection */
 	for (conn_number = 0; conn_number < ESP8266_MAX_CONNECTIONS; conn_number++) {
 		if (
