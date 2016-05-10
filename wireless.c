@@ -336,7 +336,8 @@ void ESP8266_Callback_WifiGotIP(ESP8266_t* ESP8266){
 		temp = ESP8266_GetSTAIP(wireless_S);
 		ESP8266_WaitReady(wireless_S); 
 		printf("Getting IP result %d\n", temp);
-	}while(temp);
+	}while(ip_addr[0] == 0);
+	printf("IP: %s\n", ip_addr);
 }
  
 /**
