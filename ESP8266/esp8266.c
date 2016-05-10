@@ -631,7 +631,7 @@ ESP8266_Result_t ESP8266_Update(ESP8266_t* ESP8266) {
 			char* ptr;
 			LED_Off(0);
 			LED_On(1);
-			//printf("Received All bytes\n");
+			printf("Received All bytes\n");
 			/* Not in IPD anymore */
 			ESP8266->IPD.InIPD = 0;
 			//printf("LEAVING INIPD MODE %d, %d\n", ESP8266->IPD.PtrTotal, ESP8266->Connection[ESP8266->IPD.ConnNumber].BytesReceived);
