@@ -19,7 +19,7 @@ uint16_t temp_array_size;
 static char ip_addr[20];
 
 uint8_t wifi_status = NOT_CONNECTED;
-
+uint8_t got_new_stations = 0;
 
 static ESP8266_t * wireless_S;
 static float * setpoint;
@@ -30,6 +30,41 @@ static uint16_t initHBServer();
 static void initDataServer();
 static void dataReply();
 static float * temperature;
+
+void pullRemoteDevices(){
+	if(address != HOMEBASE)
+		return;
+	
+	got_new_stations = 0;
+	ESP8266_WaitReady(wireless_S);
+	ESP8266_Result_t res;
+	
+	do{
+		res = ESP8266_GetConnectedStations(wireless_S);
+		ESP8266_WaitReady(wireless_S);
+	}while(res);
+	
+	//Continue updating the system until we have new stations
+	while(!got_new_stations){
+		ESP8266_WaitReady(wireless_S);
+	}
+	
+	char clientIP[20];
+	ESP8266_DELAYMS(wireless_S, 250);
+	uint8_t* nextIP;
+	for(uint8_t i =0; i < wireless_S->ConnectedStations.Count; i++){
+		nextIP = wireless_S->ConnectedStations.Stations[i].IP;
+		//do while wiht
+		//do{
+			sprintf(clientIP, "%d.%d.%d.%d", nextIP[0], nextIP[1], nextIP[2], nextIP[3]);
+			//printf("Establishing connection with %s\n", clientIP);
+			ESP8266_WaitReady(wireless_S);
+			res = ESP8266_StartClientConnectionTCP(wireless_S, clientIP, clientIP, SEC_PORT, (void *) 0);
+			printf("Connection Result%s : %d\n", clientIP, res);
+		//}while(res);
+	}
+	printf("Completed Getting connected Stations\n");
+}
 
 void initWireless(ESP8266_t *w, float * sp, float * temperature_p, float ** temperatures_p_p, uint16_t numElements){
 	temperature_array = temperatures_p_p;
@@ -259,8 +294,8 @@ static void HBParseRequest(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection,
 				float temp = 0.0;
 				uint16_t addr;
 				char * stringEnd;
-				sscanf(stringStart, TEMPERATURE_REPLY_FORMAT, &temp, addr);
-				printf("NEW Temperature = %f, %s\n", temp, addr);
+				sscanf(stringStart, TEMPERATURE_REPLY_FORMAT, &temp, &addr);
+				printf("NEW Temperature = %f, %d\n", temp, addr);
 	}
 	
 }
@@ -487,6 +522,8 @@ void ESP8266_Callback_ServerConnectionDataSentError(ESP8266_t* ESP8266, ESP8266_
  */
 void ESP8266_Callback_ClientConnectionConnected(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection){
 	printf("Client successfully connected to a server");
+	ESP8266_WaitReady(wireless_S);
+	ESP8266_SendData(wireless_S, Connection, TEMPERATURE_REQ, strlen(TEMPERATURE_REQ));
 }
 
 /**
@@ -570,11 +607,11 @@ void ESP8266_Callback_ClientConnectionDataSentError(ESP8266_t* ESP8266, ESP8266_
  */
 void ESP8266_Callback_ClientConnectionDataReceived(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection, char* Buffer){
 	printf("Received %s\n", Buffer);
-	/*if(homebase){
+	if(address == HOMEBASE){
 		HBParseRequest(ESP8266, Connection, Buffer);
 		return;
 	}
-	DataServerParseRequest(ESP8266, Connection, Buffer);*/
+	DataServerParseRequest(ESP8266, Connection, Buffer);
 	
 }
 
@@ -634,7 +671,7 @@ void ESP8266_Callback_ClientConnectionDataReceived(ESP8266_t* ESP8266, ESP8266_C
  * \note   With weak parameter to prevent link errors if not defined by user
  */
 void ESP8266_Callback_ConnectedStationsDetected(ESP8266_t* ESP8266, ESP8266_ConnectedStations_t* Stations){
-	printf("Get Connected STations called. Not sure when this is used\n");
+	got_new_stations = 1;
 }
 /**
  * \brief  ESP8266 returns new data about connected stations to our softAP

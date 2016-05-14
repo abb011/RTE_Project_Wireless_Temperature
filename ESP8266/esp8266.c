@@ -173,7 +173,7 @@ do {                                                        \
 #define ESP8266_CHECK_WIFICONNECTED(ESP8266)                \
 do {                                                        \
 	if (                                                    \
-		!(ESP8266)->Flags.F.WifiConnected                   \
+		!(ESP8266)->Flags.F.WifiConnected && (ESP8266->Mode == ESP8266_Mode_STA)                 \
 	) {                                                     \
 		ESP8266_RETURNWITHSTATUS(ESP8266, ESP_WIFINOTCONNECTED); \
 	}                                                       \
@@ -1354,7 +1354,7 @@ ESP8266_Result_t ESP8266_StartClientConnectionTCP(ESP8266_t* ESP8266, const char
 		/* Copy values */
 		ESP8266->Connection[i].Name = (char *)name;
 		ESP8266->Connection[i].UserParameters = user_parameters;
-		
+		ESP8266->Connection[i].LastActivity = ESP8266->Time;
 		/* Return OK */
 		ESP8266_RETURNWITHSTATUS(ESP8266, ESP_OK);
 	}
@@ -1430,6 +1430,7 @@ ESP8266_Result_t ESP8266_StartClientConnectionSSL(ESP8266_t* ESP8266, const char
 		/* Copy values */
 		ESP8266->Connection[i].Name = (char *)name;
 		ESP8266->Connection[i].UserParameters = user_parameters;
+		ESP8266->Connection[i].LastActivity = ESP8266->Time;
 		
 		/* Return OK */
 		ESP8266_RETURNWITHSTATUS(ESP8266, ESP_OK);

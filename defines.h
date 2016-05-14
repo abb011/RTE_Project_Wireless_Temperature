@@ -30,5 +30,5 @@
 
 //#define STM32F40_41xxx
 /* Put your global defines for all libraries here used in your project */
-
+#define ESP8266_USE_CONNECTED_STATIONS 1
 #endif
