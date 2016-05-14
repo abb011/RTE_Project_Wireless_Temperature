@@ -90,7 +90,7 @@ static void LED_Off(uint32_t i)
 #endif
 
 #define ESP8266_DEFAULT_BAUDRATE       115200 /*!< Default ESP8266 baudrate */
-#define ESP8266_TIMEOUT                30  /*!< Timeout value in milliseconds */
+#define ESP8266_TIMEOUT                3000  /*!< Timeout value in milliseconds */
 
 /* Debug */
 #define ESP8266_DEBUG(x)               printf("%s", x)
@@ -490,7 +490,7 @@ ESP8266_Result_t ESP8266_Update(ESP8266_t* ESP8266) {
 		/* Timeout reached */
 		if (lastcmd == ESP8266_COMMAND_CIPSTART) {
 			/* We get timeout on cipstart */
-			ESP8266_RESETCONNECTION(ESP8266, &ESP8266->Connection[ESP8266->StartConnectionSent]);
+			//ESP8266_RESETCONNECTION(ESP8266, &ESP8266->Connection[ESP8266->StartConnectionSent]);
 			
 			/* Call user function */
 			ESP8266_Callback_ClientConnectionTimeout(ESP8266, &ESP8266->Connection[ESP8266->StartConnectionSent]);
