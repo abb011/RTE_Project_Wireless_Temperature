@@ -47,7 +47,7 @@ void pullRemoteDevices(){
 	
 	//Continue updating the system until we have new stations
 	while(!got_new_stations){
-			ESP8266_DELAYMS(wireless_S, 250);
+			//ESP8266_DELAYMS(wireless_S, 250);
 		ESP8266_WaitReady(wireless_S);
 	}
 	
@@ -217,7 +217,7 @@ void serverReply(){
 	ESP8266_Connection_t * con;
 	for(uint i = 0; i<ESP8266_MAX_CONNECTIONS; i++){
 		con = &(wireless_S->Connection[i]);
-		if(reply[con->Number] && con->Active){
+		if(reply[con->Number] != NEW_TEMPERATURE && reply[con->Number] && con->Active){
 			static char temp[4000]; //= "Content-Type: text/html\r\nContent-Length: 111\r\n\r\n<html>\r\n<body>\r\n<h1>Happy New Millennium!</h1>\r\n(more file contents)\r\n  .\r\n  .\r\n  .\r\n</body>\r\n</html>";
 			static char t1[100] = "HTTP/1.1 200 OK\r\n";
 			static char t0[1000];
@@ -246,6 +246,12 @@ void serverReply(){
 			printf("%d\n",ESP8266_WaitReady(wireless_S));
 			reply[con->Number] = NO_REQUEST;
 		}
+		if(reply[con->Number] == NEW_TEMPERATURE){
+			printf("Closing the Temperature Connection %d\n", ESP8266_CloseConnection(wireless_S,con));
+			printf("%d\n",ESP8266_WaitReady(wireless_S));
+			reply[con->Number] = NO_REQUEST;
+		}
+			
 	}
 }
 
@@ -296,7 +302,7 @@ static void HBParseRequest(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection,
 					*setpoint = temp;
 				printf("NEW SETPOINT = %f, %f\n", temp, *setpoint);
 	}
-	stringStart = strstr(Buffer, TEMPERATURE_REQ);
+	stringStart = strstr(Buffer, TEMPERATURE_R);
 	printf("STring STart %d : \n ", stringStart);
 	if(stringStart){
 		reply[Connection->Number] = NEW_TEMPERATURE;
@@ -518,6 +524,7 @@ void ESP8266_Callback_ServerConnectionDataSent(ESP8266_t* ESP8266, ESP8266_Conne
  * \note   With weak parameter to prevent link errors if not defined by user
  */
 void ESP8266_Callback_ServerConnectionDataSentError(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection){
+	
 	printf("Server Failed to send Data\n");
 }
 
@@ -546,6 +553,7 @@ void ESP8266_Callback_ClientConnectionConnected(ESP8266_t* ESP8266, ESP8266_Conn
  */
 void ESP8266_Callback_ClientConnectionError(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection){
 	printf("Client connection error\n");
+	timed_out[Connection->Number] = 1;
 }
 
 /**
