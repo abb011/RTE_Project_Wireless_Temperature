@@ -9,6 +9,7 @@
 #define NEW_TEMPERATURE 4
 #define NOT_CONNECTED 0
 #define WIFI_CONNECTED 1
+#define HOMEBASE 0
 
 uint16_t numConnections = 0;
 uint16_t reply[ESP8266_MAX_CONNECTIONS];
@@ -22,7 +23,8 @@ uint8_t wifi_status = NOT_CONNECTED;
 
 static ESP8266_t * wireless_S;
 static float * setpoint;
-static uint16_t homebase = 0;
+static uint16_t address = 0;
+
 static void serverReply();
 static uint16_t initHBServer();
 static void initDataServer();
@@ -40,18 +42,26 @@ void initWireless(ESP8266_t *w, float * sp, float * temperature_p, float ** temp
 	wireless_S = w;
 	setpoint = sp;
 	printf("Starting SP %f\n", *sp);
-	//Init a GPIO and read to see if it is homebase or not
+	//Init a A0 and A1 and read to get device ID or not
 	GPIO_InitTypeDef GPIO_InitDef;
-	GPIO_InitDef.GPIO_Pin= GPIO_Pin_1;
+	GPIO_InitDef.GPIO_Pin= GPIO_Pin_1|GPIO_Pin_0;
 	GPIO_InitDef.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_InitDef.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitDef.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	GPIO_InitDef.GPIO_Speed = GPIO_Speed_100MHz;
 	GPIO_Init(GPIOA, &GPIO_InitDef);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
-	homebase = GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_1);
-	printf("Homebase %d\n", homebase);
-	if(homebase){
+	
+	address = 0;
+	if(GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_1))
+		address+=2;
+	
+	if(GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_0))
+		address+=1;
+	
+	
+	printf("Address %d\n", address);
+	if(address == HOMEBASE){
 		while(initHBServer());
 	}else{
 		initDataServer();
@@ -64,7 +74,7 @@ void sendToConnection(){
 			timed_out[i] = 0;
 		}
 	}
-	if (homebase){
+	if (address== HOMEBASE){
 		serverReply();
 		return;
 	}
@@ -202,7 +212,7 @@ void dataReply(){
 		con = &(wireless_S->Connection[i]);
 		if(reply[con->Number] && con->Active){
 			static char reply_str[100]; 
-			sprintf(reply_str,TEMPERATURE_REPLY_FORMAT, *temperature, ip_addr);
+			sprintf(reply_str,TEMPERATURE_REPLY_FORMAT, *temperature, address);
 			printf("REPLY: %s\n",reply_str);
 			
 			ESP8266_WaitReady(wireless_S);
@@ -247,10 +257,10 @@ static void HBParseRequest(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection,
 	if(stringStart){
 		reply[Connection->Number] = NEW_TEMPERATURE;
 				float temp = 0.0;
-				char ip[20];
+				uint16_t addr;
 				char * stringEnd;
-				sscanf(stringStart, TEMPERATURE_REPLY_FORMAT, &temp, ip);
-				printf("NEW Temperature = %f, %s\n", temp, ip);
+				sscanf(stringStart, TEMPERATURE_REPLY_FORMAT, &temp, addr);
+				printf("NEW Temperature = %f, %s\n", temp, addr);
 	}
 	
 }
@@ -411,7 +421,7 @@ void ESP8266_Callback_ServerConnectionClosed(ESP8266_t* ESP8266, ESP8266_Connect
  * \note   With weak parameter to prevent link errors if not defined by user
  */
 void ESP8266_Callback_ServerConnectionDataReceived(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection, char* Buffer){
-	if(homebase){
+	if(address == HOMEBASE){
 		return HBParseRequest(ESP8266, Connection, Buffer);
 	}
 	return DataServerParseRequest(ESP8266, Connection, Buffer);

@@ -7,7 +7,7 @@
 #define NETWORK_SSID "HomeAutomation"
 #define NETWORK_PWD "password1234567890"
 #define TEMPERATURE_REQ "GET /read_temp.asp?temperature=\n"
-#define TEMPERATURE_REPLY_FORMAT "GET /read_temp.asp?temperature=\n%f/source.asp?=%s\n"
+#define TEMPERATURE_REPLY_FORMAT "GET /read_temp.asp?temperature=\n%f/source.asp?=%d\n"
 #define HB_PORT 8000
 #define SEC_PORT 4000
 #define NUM_DEVICE 4
