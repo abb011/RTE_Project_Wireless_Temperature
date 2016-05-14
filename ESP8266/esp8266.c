@@ -90,7 +90,7 @@ static void LED_Off(uint32_t i)
 #endif
 
 #define ESP8266_DEFAULT_BAUDRATE       115200 /*!< Default ESP8266 baudrate */
-#define ESP8266_TIMEOUT                30  /*!< Timeout value in milliseconds */
+#define ESP8266_TIMEOUT                3000  /*!< Timeout value in milliseconds */
 
 /* Debug */
 #define ESP8266_DEBUG(x)               printf("%s", x)
@@ -173,7 +173,7 @@ do {                                                        \
 #define ESP8266_CHECK_WIFICONNECTED(ESP8266)                \
 do {                                                        \
 	if (                                                    \
-		!(ESP8266)->Flags.F.WifiConnected                   \
+		!(ESP8266)->Flags.F.WifiConnected && (ESP8266->Mode == ESP8266_Mode_STA)                 \
 	) {                                                     \
 		ESP8266_RETURNWITHSTATUS(ESP8266, ESP_WIFINOTCONNECTED); \
 	}                                                       \
@@ -490,7 +490,7 @@ ESP8266_Result_t ESP8266_Update(ESP8266_t* ESP8266) {
 		/* Timeout reached */
 		if (lastcmd == ESP8266_COMMAND_CIPSTART) {
 			/* We get timeout on cipstart */
-			ESP8266_RESETCONNECTION(ESP8266, &ESP8266->Connection[ESP8266->StartConnectionSent]);
+			//ESP8266_RESETCONNECTION(ESP8266, &ESP8266->Connection[ESP8266->StartConnectionSent]);
 			
 			/* Call user function */
 			ESP8266_Callback_ClientConnectionTimeout(ESP8266, &ESP8266->Connection[ESP8266->StartConnectionSent]);
@@ -631,7 +631,7 @@ ESP8266_Result_t ESP8266_Update(ESP8266_t* ESP8266) {
 			char* ptr;
 			LED_Off(0);
 			LED_On(1);
-			//printf("Received All bytes\n");
+			printf("Received All bytes\n");
 			/* Not in IPD anymore */
 			ESP8266->IPD.InIPD = 0;
 			//printf("LEAVING INIPD MODE %d, %d\n", ESP8266->IPD.PtrTotal, ESP8266->Connection[ESP8266->IPD.ConnNumber].BytesReceived);
@@ -1354,7 +1354,7 @@ ESP8266_Result_t ESP8266_StartClientConnectionTCP(ESP8266_t* ESP8266, const char
 		/* Copy values */
 		ESP8266->Connection[i].Name = (char *)name;
 		ESP8266->Connection[i].UserParameters = user_parameters;
-		
+		ESP8266->Connection[i].LastActivity = ESP8266->Time;
 		/* Return OK */
 		ESP8266_RETURNWITHSTATUS(ESP8266, ESP_OK);
 	}
@@ -1430,6 +1430,7 @@ ESP8266_Result_t ESP8266_StartClientConnectionSSL(ESP8266_t* ESP8266, const char
 		/* Copy values */
 		ESP8266->Connection[i].Name = (char *)name;
 		ESP8266->Connection[i].UserParameters = user_parameters;
+		ESP8266->Connection[i].LastActivity = ESP8266->Time;
 		
 		/* Return OK */
 		ESP8266_RETURNWITHSTATUS(ESP8266, ESP_OK);
@@ -3052,7 +3053,6 @@ ESP8266_Result_t SendMACCommand(ESP8266_t* ESP8266, uint8_t* addr, const char* c
 static
 void CallConnectionCallbacks(ESP8266_t* ESP8266) {
 	uint8_t conn_number;
-	
 	/* Check if there are any pending data to be sent to connection */
 	for (conn_number = 0; conn_number < ESP8266_MAX_CONNECTIONS; conn_number++) {
 		if (
