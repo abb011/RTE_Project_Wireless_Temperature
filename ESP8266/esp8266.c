@@ -673,9 +673,11 @@ ESP8266_Result_t ESP8266_WaitReady(ESP8266_t* ESP8266) {
 	do {
 		/* Check for wrapper */
 		if (ESP8266->Flags.F.WaitForWrapper) {
+			LED_On(3);
 			/* We have found it, stop execution here */
 			if (BUFFER_Find(&USART_Buffer, (uint8_t *)"> ", 2) >= 0) {
 				ESP8266->Flags.F.WaitForWrapper = 0;
+				LED_Off(3);
 				break;
 			}
 		}
@@ -2799,6 +2801,7 @@ void ParseReceived(ESP8266_t* ESP8266, char* Received, uint8_t from_usart_buffer
 			if (CHARISNUM(Received[0])) {
 				/* Parse response */
 				ParseCWLIF(ESP8266, Received);
+				//printf("RECEIVED CWLIF %s\n", Received);
 			}
 		
 			if (strcmp(Received, "OK\r\n") == 0) {

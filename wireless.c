@@ -10,10 +10,12 @@
 #define NOT_CONNECTED 0
 #define WIFI_CONNECTED 1
 #define HOMEBASE 0
-
+uint16_t activeConNumber = -1;
+uint16_t clientSendData = 0;
+uint16_t tcpTimeout = 0;
 uint16_t numConnections = 0;
 uint16_t reply[ESP8266_MAX_CONNECTIONS];
-uint16_t sendTempRequest[ESP8266_MAX_CONNECTIONS];
+uint16_t sendTempRequest;
 float ** temperature_array;
 uint16_t timed_out[ESP8266_MAX_CONNECTIONS];
 uint16_t temp_array_size;
@@ -42,6 +44,12 @@ void pullRemoteDevices(){
 	
 	do{
 		res = ESP8266_GetConnectedStations(wireless_S);
+		ESP8266_DELAYMS(wireless_S, 100);
+		ESP8266_WaitReady(wireless_S);
+	}while(res);
+	do{
+		res = ESP8266_GetConnectedStations(wireless_S);
+		ESP8266_DELAYMS(wireless_S, 100);
 		ESP8266_WaitReady(wireless_S);
 	}while(res);
 	
@@ -59,15 +67,44 @@ void pullRemoteDevices(){
 		nextIP = wireless_S->ConnectedStations.Stations[i].IP;
 		//do while wiht
 		//do{
-			sprintf(clientIP, "%d.%d.%d.%d", nextIP[0], nextIP[1], nextIP[2], nextIP[3]);
-			//printf("Establishing connection with %s\n", clientIP);
+		sprintf(clientIP, "%d.%d.%d.%d", nextIP[0], nextIP[1], nextIP[2], nextIP[3]);
+		printf("Establishing connection with %s of %d\n", clientIP,wireless_S->ConnectedStations.Count );
+		ESP8266_WaitReady(wireless_S);
+		tcpTimeout = 0;
+		res = ESP8266_StartClientConnectionTCP(wireless_S, clientIP, clientIP, SEC_PORT, (void *) 0);
+		ESP8266_WaitReady(wireless_S);
+		
+		while(sendTempRequest ==0){
 			ESP8266_WaitReady(wireless_S);
-			res = ESP8266_StartClientConnectionTCP(wireless_S, clientIP, clientIP, SEC_PORT, (void *) 0);
+			if(tcpTimeout)
+				break;
+		}
+		if(tcpTimeout){
+			tcpTimeout = 0;
+		}else{
+		printf("HEERE!\n");
+		if(sendTempRequest){
 			ESP8266_WaitReady(wireless_S);
-			printf("\nConnection Result%s : %d\n\n", clientIP, res);
-		//}while(res);
+			printf("Send STATUS %D\n", ESP8266_SendData(wireless_S, &(wireless_S->Connection[activeConNumber]), TEMPERATURE_REQ, strlen(TEMPERATURE_REQ)));
+			//while(clientSendData == 0){
+			ESP8266_WaitReady(wireless_S);
+			//}
+					printf("HEERE2!\n");
+			//clientSendData = 0;
+			while(sendTempRequest && !timed_out[activeConNumber]&& wireless_S->Connection[activeConNumber].Active){
+				ESP8266_WaitReady(wireless_S);
+
+			}
+			
+		printf("HERE3\n");
+			
+		}
+	  }
+	printf("\nConnection Result%s : %d\n\n", clientIP, res);
 	}
-	//printf("Completed Getting connected Stations\n");
+
+		//}while(res);
+	printf("Completed Getting connected Stations\n");
 }
 
 void initWireless(ESP8266_t *w, float * sp, float * temperature_p, float ** temperatures_p_p, uint16_t numElements){
@@ -77,7 +114,7 @@ void initWireless(ESP8266_t *w, float * sp, float * temperature_p, float ** temp
 	
 	for(uint8_t i = 0; i<ESP8266_MAX_CONNECTIONS; i++){
 		timed_out[i] = 0;
-		sendTempRequest[i] =0;
+		sendTempRequest =0;
 	}
 	wireless_S = w;
 	setpoint = sp;
@@ -113,6 +150,7 @@ void sendToConnection(){
 			ESP8266_WaitReady(wireless_S);
 			printf("Closing Connection: %d\n", ESP8266_CloseConnection(wireless_S, &(wireless_S->Connection[i])));
 			timed_out[i] = 0;
+			sendTempRequest = 0;
 			ESP8266_WaitReady(wireless_S);
 		}
 	}
@@ -121,16 +159,7 @@ void sendToConnection(){
 	}else{
 			dataReply();
 	}
-	for(uint8_t i = 0; i < ESP8266_MAX_CONNECTIONS; i++){
-		if(sendTempRequest[i]){
-			ESP8266_WaitReady(wireless_S);
-			ESP8266_SendData(wireless_S, &(wireless_S->Connection[i]), TEMPERATURE_REQ, strlen(TEMPERATURE_REQ));
-			sendTempRequest[i] = 0;
-			ESP8266_WaitReady(wireless_S);
-		}
-	}
-
-
+	
 }
 
 
@@ -254,11 +283,7 @@ void serverReply(){
 			printf("%d\n",ESP8266_WaitReady(wireless_S));
 			reply[con->Number] = NO_REQUEST;
 		}
-		if(reply[con->Number] == NEW_TEMPERATURE){
-			printf("Closing the Temperature Connection %d\n", ESP8266_CloseConnection(wireless_S,con));
-			printf("%d\n",ESP8266_WaitReady(wireless_S));
-			reply[con->Number] = NO_REQUEST;
-		}
+
 			
 	}
 }
@@ -314,11 +339,17 @@ static void HBParseRequest(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection,
 	printf("STring STart %d : \n ", stringStart);
 	if(stringStart){
 		reply[Connection->Number] = NEW_TEMPERATURE;
-				float temp = 0.0;
-				uint16_t addr;
-				char * stringEnd;
-				sscanf(stringStart, TEMPERATURE_REPLY_FORMAT, &temp, &addr);
-				printf("NEW Temperature = %f, %d\n", temp, addr);
+			float temp = 0.0;
+		uint16_t addr;
+		char * stringEnd;
+		sscanf(stringStart, TEMPERATURE_REPLY_FORMAT, &temp, &addr);
+		printf("NEW Temperature = %f, %d\n", temp, addr);
+		*temperature_array[addr] = temp;
+		printf("%d\n",ESP8266_WaitReady(wireless_S));
+		printf("Closing the Temperature Connection %d\n", ESP8266_CloseConnection(wireless_S,Connection));
+		printf("%d\n",ESP8266_WaitReady(wireless_S));
+		reply[Connection->Number] = NO_REQUEST;
+	
 	}
 	
 }
@@ -497,6 +528,7 @@ void ESP8266_Callback_ServerConnectionDataReceived(ESP8266_t* ESP8266, ESP8266_C
  * \note   With weak parameter to prevent link errors if not defined by user
  */
 uint16_t ESP8266_Callback_ServerConnectionSendData(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection, char* Buffer, uint16_t max_buffer_size){
+	
 	printf("this function is called when a client requests data from a server. This is when we would send the temperature\n");
 	return 0;
 }
@@ -543,8 +575,9 @@ void ESP8266_Callback_ServerConnectionDataSentError(ESP8266_t* ESP8266, ESP8266_
  * \note   With weak parameter to prevent link errors if not defined by user
  */
 void ESP8266_Callback_ClientConnectionConnected(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection){
-	printf("IN THE CLIENT CALLBACK!!!!!!!\n");
-	sendTempRequest[Connection->Number] =1;
+	printf("Connected to  Server as Client!!!!!!!\n");
+	activeConNumber = Connection->Number;
+	sendTempRequest =1;
 	
 	//ESP8266_WaitReady(wireless_S);
 	//ESP8266_SendData(wireless_S, Connection, TEMPERATURE_REQ, strlen(TEMPERATURE_REQ));
@@ -570,6 +603,7 @@ void ESP8266_Callback_ClientConnectionError(ESP8266_t* ESP8266, ESP8266_Connecti
  * \note   With weak parameter to prevent link errors if not defined by user
  */
 void ESP8266_Callback_ClientConnectionTimeout(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection){
+	tcpTimeout = 1;
 	printf("TCP CONNECTION DROPPED Client connection timed out - probably should retry them stop\n ");
 }
 
@@ -595,9 +629,11 @@ void ESP8266_Callback_ClientConnectionClosed(ESP8266_t* ESP8266, ESP8266_Connect
  * \note   With weak parameter to prevent link errors if not defined by user
  */
 uint16_t ESP8266_Callback_ClientConnectionSendData(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection, char* Buffer, uint16_t max_buffer_size){
-	printf("The client has been requested to send data. We need to reply with stuff in the buffer?\n");
-	uint16_t numBytes = 0;
-	return numBytes;
+	clientSendData = 1;
+	//printf("The client has been requested to send data. We need to reply with stuff in the buffer?\n");
+	//memcpy(Buffer, TEMPERATURE_REQ,  strlen(TEMPERATURE_REQ));
+	return 0;// strlen(TEMPERATURE_REQ);
+
 }
 
 /**

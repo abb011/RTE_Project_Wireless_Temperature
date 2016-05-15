@@ -2,6 +2,7 @@
 #include "stm32f4xx_rcc.h"
 #include "stm32f4xx_gpio.h"
 #include "wireless.h"
+#include "pid.h"
 
 
 #include "ds18b20.h"
@@ -102,7 +103,9 @@ void esp8266_update_func(){
 
 float local_temperature= 0;
 
+float temperature_array[ESP8266_MAX_CONNECTEDSTATIONS];
 void getLatestTemperature(){
+	temperature_array[0] = local_temperature;
 	local_temperature = getTemperature();
 	printf("Current Temperature is %f\n", local_temperature);
 }
@@ -112,7 +115,7 @@ int main(void)
 
 
   float sp;
-  float temperature_array[ESP8266_MAX_CONNECTEDSTATIONS];
+
   // initialize
   
   SystemInit();
@@ -120,7 +123,12 @@ int main(void)
   init_systick();
   init_LED_pins();
   init_button();
-  
+  initPWM();
+  init_LED_PWM();
+   set_LED_dutycycle(2 , 50);
+  for(uint16_t i = 0; i<ESP8266_MAX_CONNECTEDSTATIONS; i ++){
+	  temperature_array[i] = -1.0;
+  }
   initWireless(&wireless_S, &sp, &local_temperature, &temperature_array, ESP8266_MAX_CONNECTEDSTATIONS);
   
   //Init the UARt
