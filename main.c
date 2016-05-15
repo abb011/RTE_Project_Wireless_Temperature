@@ -96,6 +96,7 @@ extern uint16_t * reply;
 
 void esp8266_update_func(){
 	ESP8266_Update(&wireless_S);
+	ESP8266_WaitReady(&wireless_S);
 	sendToConnection();
 }
 
@@ -134,7 +135,7 @@ int main(void)
   add_timed_task(storeTemperature, DS18B20_PERIOD);
   add_timed_task(getLatestTemperature,4);
   add_timed_task(esp8266_update_func, .1);
-  add_timed_task(pullRemoteDevices,10);
+  add_timed_task(pullRemoteDevices,30);
   //add_timed_task(sendToConnection, .05);
   
   

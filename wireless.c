@@ -110,19 +110,27 @@ void initWireless(ESP8266_t *w, float * sp, float * temperature_p, float ** temp
 void sendToConnection(){
 	for(uint8_t i = 0; i < ESP8266_MAX_CONNECTIONS; i++){
 		if(timed_out[i]){
+			ESP8266_WaitReady(wireless_S);
 			printf("Closing Connection: %d\n", ESP8266_CloseConnection(wireless_S, &(wireless_S->Connection[i])));
 			timed_out[i] = 0;
-		}else if(sendTempRequest[i]){
 			ESP8266_WaitReady(wireless_S);
-			ESP8266_SendData(wireless_S, &(wireless_S->Connection[i]), TEMPERATURE_REQ, strlen(TEMPERATURE_REQ));
-			sendTempRequest[i] = 0;
 		}
 	}
 	if (address== HOMEBASE){
 		serverReply();
-		return;
+	}else{
+			dataReply();
 	}
-	dataReply();
+	for(uint8_t i = 0; i < ESP8266_MAX_CONNECTIONS; i++){
+		if(sendTempRequest[i]){
+			ESP8266_WaitReady(wireless_S);
+			ESP8266_SendData(wireless_S, &(wireless_S->Connection[i]), TEMPERATURE_REQ, strlen(TEMPERATURE_REQ));
+			sendTempRequest[i] = 0;
+			ESP8266_WaitReady(wireless_S);
+		}
+	}
+
+
 }
 
 
@@ -234,7 +242,7 @@ void serverReply(){
 			static char t3[100];
 			sprintf(t3, "Content-Length: %d\r\n\r\n", strlen(t0));
 			//sprintf(temp, "%s%s%s",t2,t3,t0);
-			sprintf(temp, "%s%s%s%s",t1,t2,t3,t0);
+			sprintf(temp, "%s%s%s%s\n\n\n\n\n\n\n\n\n\n\n",t1,t2,t3,t0);
 			printf("REPLY: %s\n",temp);
 			
 			printf("%d\n",ESP8266_WaitReady(wireless_S));
@@ -458,6 +466,7 @@ void ESP8266_Callback_ServerConnectionActive(ESP8266_t* ESP8266, ESP8266_Connect
  */
 void ESP8266_Callback_ServerConnectionClosed(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection){
 	numConnections--;
+	(ESP8266->IPD).InIPD = 0;
 	printf("TCP Connection end of data stream\n");
 	
 }
@@ -489,19 +498,16 @@ void ESP8266_Callback_ServerConnectionDataReceived(ESP8266_t* ESP8266, ESP8266_C
  */
 uint16_t ESP8266_Callback_ServerConnectionSendData(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection, char* Buffer, uint16_t max_buffer_size){
 	printf("this function is called when a client requests data from a server. This is when we would send the temperature\n");
-	uint16_t numBytes = 10;
-	char temp[10] = "1234567890";
-	for(uint16_t i = 0; i < numBytes; i++)
-		Buffer[i] = temp[i];
-
-	return numBytes;
+	return 0;
 }
 
 void ESP8266_Callback_Connection_Timeout(ESP8266_t * ESP8266, ESP8266_Connection_t * Connection){
-	printf("Connection Timedout!!!: %d\n", Connection->Number);
-	ESP8266->ActiveCommand = 0;
-	(ESP8266->IPD).InIPD = 0;
-	timed_out[Connection->Number] = 1;
+	if(timed_out[Connection->Number] ==0){
+		printf("Connection Timedout!!!: %d\n", Connection->Number);
+		ESP8266->ActiveCommand = 0;
+		(ESP8266->IPD).InIPD = 0;
+		timed_out[Connection->Number] = 1;
+	}
 }
 
 /**
