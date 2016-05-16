@@ -28,6 +28,7 @@
 #ifndef TM_DEFINES_H
 #define TM_DEFINES_H
 
+#define ARM_MATH_CM4
 //#define STM32F40_41xxx
 /* Put your global defines for all libraries here used in your project */
 #define ESP8266_USE_CONNECTED_STATIONS 1

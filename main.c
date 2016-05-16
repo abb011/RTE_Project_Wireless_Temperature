@@ -1,8 +1,10 @@
+#include "defines.h"
 #include "stm32f4xx.h"
 #include "stm32f4xx_rcc.h"
 #include "stm32f4xx_gpio.h"
 #include "wireless.h"
 #include "pid.h"
+
 
 
 #include "ds18b20.h"
@@ -123,13 +125,13 @@ int main(void)
   init_systick();
   init_LED_pins();
   init_button();
-  initPWM();
-  init_LED_PWM();
-   set_LED_dutycycle(2 , 50);
+  initPID(20.0,5.0,0.0, temperature_array, &sp);
+  run_PID();
+  
   for(uint16_t i = 0; i<ESP8266_MAX_CONNECTEDSTATIONS; i ++){
 	  temperature_array[i] = -1.0;
   }
-  initWireless(&wireless_S, &sp, &local_temperature, &temperature_array, ESP8266_MAX_CONNECTEDSTATIONS);
+  initWireless(&wireless_S, &sp, &local_temperature, temperature_array, ESP8266_MAX_CONNECTEDSTATIONS);
   
   //Init the UARt
   //USART_Configuration();

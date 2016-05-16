@@ -20,6 +20,7 @@
 
 #include "tm_stm32f4_delay.h"
 #include "../ESP8266/esp8266.h"
+#include "pid.h"
 
 extern ESP8266_t wireless_S;
 
@@ -61,6 +62,8 @@ void SysTick_Handler(void) {
 	//MY CODE
 	msTicks = TM_Time;	
 	ESP8266_TimeUpdate(&wireless_S,1);
+	runPWM(1);
+	
 	//END MY CODE
 	if (TM_Time2 != 0x00) {
 		TM_Time2--;

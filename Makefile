@@ -65,6 +65,7 @@ SRCS += $(STM_COMMON)/Libraries/CMSIS/ST/STM32F4xx/Source/Templates/TrueSTUDIO/s
 STM_SRCDIR = $(STM_COMMON)/Libraries/STM32F4xx_StdPeriph_Driver/src
 SRCS += $(STM_SRCDIR)/stm32f4xx_gpio.c $(STM_SRCDIR)/stm32f4xx_spi.c $(STM_SRCDIR)/stm32f4xx_rcc.c  $(STM_SRCDIR)/stm32f4xx_usart.c  $(STM_SRCDIR)/misc.c $(STM_SRCDIR)/stm32f4xx_tim.c 
 
+SRCS += $(STM_COMMON)/Libraries/CMSIS/DSP_Lib/Source/ControllerFunctions/arm_pid_init_f32.c
 OBJS = $(addprefix $(BUILDDIR)/, $(addsuffix .o, $(basename $(SRCS))))
 
 SEMIHOSTING_FLAGS = --specs=rdimon.specs -lc -lrdimon 

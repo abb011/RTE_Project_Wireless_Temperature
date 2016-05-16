@@ -2,104 +2,92 @@
 #include "OneWire/tm_stm32f4_pwm.h"
  TM_PWM_TIM_t TIM2_Data;
  
- void initPWM(){
-	float x;
-	printf("INITIED %d\n", TM_PWM_InitTimer(TIM2,&TIM2_Data, 1.0/60));
-	TM_PWM_InitChannel(&TIM2_Data, TM_PWM_Channel_3, TM_PWM_PinsPack_2);
-	TM_PWM_SetChannelPercent(&TIM2_Data, TM_PWM_Channel_3, x);
-	
-}
-
-
-
-void init_LED_PWM()
+ static uint32_t period;
+ static uint32_t T_On;
+ static arm_pid_instance_f32 pid_loop;
+ static uint8_t initted= 0;
+ static float * temperatures;
+ static float * sp;
+ 
+ 
+ static void LED_On(uint32_t i)
 {
-	GPIO_InitTypeDef GPIO_InitStruct;
-
-	/* Clock for GPIOD */
-    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
-
-	/* Alternate functions for pins -- as timer-based (PWM) */
-	GPIO_PinAFConfig(GPIOD, GPIO_PinSource12, GPIO_AF_TIM4);
-	GPIO_PinAFConfig(GPIOD, GPIO_PinSource13, GPIO_AF_TIM4);
-	GPIO_PinAFConfig(GPIOD, GPIO_PinSource14, GPIO_AF_TIM4);
-	GPIO_PinAFConfig(GPIOD, GPIO_PinSource15, GPIO_AF_TIM4);
-
-	/* Set pins */
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
-	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
-	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_100MHz;
-	GPIO_Init(GPIOD, &GPIO_InitStruct);
-	
-	TIM_TimeBaseInitTypeDef TIM_BaseStruct;
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE); // enable clock
-	TIM_BaseStruct.TIM_Prescaler = 840;
-	TIM_BaseStruct.TIM_CounterMode = TIM_CounterMode_Up;
-	TIM_BaseStruct.TIM_Period = 65535;
-  TIM_BaseStruct.TIM_ClockDivision = TIM_CKD_DIV1;
-  TIM_BaseStruct.TIM_RepetitionCounter = 0;
-	TIM_TimeBaseInit(TIM4, &TIM_BaseStruct);
-	TIM_Cmd(TIM4, ENABLE);
-	
-	TIM_OCInitTypeDef TIM_OCStruct;
-	TIM_OCStruct.TIM_OCMode = TIM_OCMode_PWM2;
-	TIM_OCStruct.TIM_OutputState = TIM_OutputState_Enable;
-	TIM_OCStruct.TIM_OCPolarity = TIM_OCPolarity_Low;
-	TIM_OCStruct.TIM_Pulse = 0; 
-	TIM_OC1Init(TIM4, &TIM_OCStruct);
-	TIM_OC1PreloadConfig(TIM4, TIM_OCPreload_Enable);
-	TIM_OCStruct.TIM_Pulse = 0; 
-	TIM_OC2Init(TIM4, &TIM_OCStruct);
-	TIM_OC2PreloadConfig(TIM4, TIM_OCPreload_Enable);
-	TIM_OCStruct.TIM_Pulse = 0; 
-	TIM_OC3Init(TIM4, &TIM_OCStruct);
-	TIM_OC3PreloadConfig(TIM4, TIM_OCPreload_Enable);
-	TIM_OCStruct.TIM_Pulse = 0; 
-	TIM_OC4Init(TIM4, &TIM_OCStruct);
-	TIM_OC4PreloadConfig(TIM4, TIM_OCPreload_Enable);
+  GPIOD->BSRRL = 1 << (i+12);
 }
 
-// set dutycycle of LED i (i=0,1,2,3) to dutycycle (specified as percentage -- 0 to 100)
-void set_LED_dutycycle(uint32_t i , uint32_t duty_cycle)
+static void LED_Off(uint32_t i)
 {
-	uint32_t arr = TIM4->ARR;
-	uint32_t ccr = ((float)(arr+1) * (duty_cycle / 100.0));
-  if (ccr < 0) ccr = 0;
-  if (ccr > arr) ccr = arr;
-	if (i == 0) { TIM4->CCR1 = ccr; }
-  if (i == 1) { TIM4->CCR2 = ccr; }
-  if (i == 2) { TIM4->CCR3 = ccr; }
-  if (i == 3) { TIM4->CCR4 = ccr; }
+  GPIOD->BSRRH = 1 << (i+12);
+}
+
+ static void initPWM(uint32_t period_ms){
+	period = period_ms;
+
+	GPIO_InitTypeDef GPIO_InitDef;
+	GPIO_InitDef.GPIO_Pin= GPIO_Pin_10;
+	GPIO_InitDef.GPIO_Mode = GPIO_Mode_OUT;
+	GPIO_InitDef.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitDef.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_InitDef.GPIO_Speed = GPIO_Speed_100MHz;
+	GPIO_Init(GPIOB, &GPIO_InitDef);
+	GPIO_ResetBits(GPIOC, GPIO_Pin_10 );
 }
 
 
-void initPID(uint8_t kp, uint8_t ki, uint8_t kd){
+void runPWM(uint32_t ms_incr){
+	if(initted ==0)
+		return;
+	static uint32_t time = 0;
+	time = (time+ms_incr)%period;
+	if(time<T_On){
+		GPIO_SetBits(GPIOC, GPIO_Pin_10 );
+		LED_On(2);
+	}else{
+		GPIO_ResetBits(GPIOC, GPIO_Pin_10 );
+		LED_Off(2);
+	}
 	
 }
 
 
-updatePIDoutput(float nextValue){
-	static float prevValue = 0;
-	float error = prevValue - nextValue;
-	prevValue = nextValue;
+
+
+void initPID(float kp, float ki, float kd, float * temp_array, float *setpoint){
+    initPWM(60*1000);
+	pid_loop.Kp = kp;
+	pid_loop.Ki = ki;
+	pid_loop.Kd = kd;
+	sp = setpoint;
+	temperatures = temp_array;
 	
-	//CMISIS CALL
-	
-	//UPDATE PWM output
-	
+	arm_pid_init_f32(&pid_loop, 1);
+	initted = 1;
 }
 
-float getAverageTemperature(float** temp){
+void run_PID(){
+	float error = (*sp)- getAverageTemperature(temperatures);
+	float op = arm_pid_f32(&pid_loop, error);
+	printf("Current Error is %f\nCurrent OP is %f\n",error, op);
+	if(op<L_THRESHOLD)
+		op = 0.0;
+	if(op>H_THRESHOLD)
+		op = 100.0;
+	
+	op = 50.0;
+	T_On = period/100.0*op;
+}
+
+
+
+float getAverageTemperature(float* temp){
 	float average = 0;
 	uint8_t count = 0;
-	/*for(uint8_t i = 0; i < ESP8266_MAX_CONNECTEDSTATIONS; i++){
-		if(*temp[i] >0){
-			average+=*temp[i];
+	for(uint8_t i = 0; i < ESP8266_MAX_CONNECTEDSTATIONS; i++){
+		if(temp[i] >0){
+			average+=temp[i];
 			count++;
 		}
-	}*/
+	}
 	if(count ==0)
 		return -1;
 	return average/count;

@@ -15,5 +15,5 @@
 
 
 void sendToConnection();
-void initWireless(ESP8266_t *w, float * sp, float * temperature_p, float ** temperatures_p_p, uint16_t numElements);
+void initWireless(ESP8266_t *w, float * sp, float * temperature_p, float * temperatures_p_p, uint16_t numElements);
 void pullRemoteDevices();

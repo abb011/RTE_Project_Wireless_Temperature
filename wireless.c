@@ -16,7 +16,7 @@ uint16_t tcpTimeout = 0;
 uint16_t numConnections = 0;
 uint16_t reply[ESP8266_MAX_CONNECTIONS];
 uint16_t sendTempRequest;
-float ** temperature_array;
+float * temperature_array;
 uint16_t timed_out[ESP8266_MAX_CONNECTIONS];
 uint16_t temp_array_size;
 static char ip_addr[20];
@@ -107,7 +107,7 @@ void pullRemoteDevices(){
 	printf("Completed Getting connected Stations\n");
 }
 
-void initWireless(ESP8266_t *w, float * sp, float * temperature_p, float ** temperatures_p_p, uint16_t numElements){
+void initWireless(ESP8266_t *w, float * sp, float * temperature_p, float * temperatures_p_p, uint16_t numElements){
 	temperature_array = temperatures_p_p;
 	temperature = temperature_p;
 	temp_array_size = numElements;
@@ -344,7 +344,7 @@ static void HBParseRequest(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection,
 		char * stringEnd;
 		sscanf(stringStart, TEMPERATURE_REPLY_FORMAT, &temp, &addr);
 		printf("NEW Temperature = %f, %d\n", temp, addr);
-		*temperature_array[addr] = temp;
+		temperature_array[addr] = temp;
 		printf("%d\n",ESP8266_WaitReady(wireless_S));
 		printf("Closing the Temperature Connection %d\n", ESP8266_CloseConnection(wireless_S,Connection));
 		printf("%d\n",ESP8266_WaitReady(wireless_S));
