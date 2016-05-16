@@ -1,5 +1,7 @@
 #include "wireless.h"
 #include "defines.h"
+
+
 #define NO_REQUEST 0
 #define VALID_REQUEST 1
 
@@ -41,6 +43,8 @@ void pullRemoteDevices(){
 	got_new_stations = 0;
 	ESP8266_WaitReady(wireless_S);
 	ESP8266_Result_t res;
+	res = ESP8266_ServerDisable(wireless_S);
+	D(printf("Closing Server REsult %d\n", res));
 	
 	//Close the CIP SERVER Then Reopen it
 	do{
@@ -105,6 +109,10 @@ void pullRemoteDevices(){
 	D(printf("\nConnection Result%s : %d\n\n", clientIP, res));
 	}
 
+	res = ESP8266_ServerEnable(wireless_S, HB_PORT);
+		D(printf("Hosting a server at port %d: Success = 0: %d\n", HB_PORT, res));
+		ESP8266_WaitReady(wireless_S);
+		
 		//}while(res);
 	D(printf("Completed Getting connected Stations\n"));
 }
@@ -178,6 +186,10 @@ uint16_t initHBServer(){
   ap_s.Hidden = 0;
   ESP8266_Result_t res;
 	do{
+		ESP8266_WaitReady(wireless_S);
+		ESP8266_RESET_LOW  
+		ESP8266_DELAYMS(wireless_S, 500)
+		ESP8266_RESET_HIGH
 		res=ESP8266_Init(wireless_S, 115200);
 		D(printf("Initializing Wifi: %d \n",res));
 		ESP8266_WaitReady(wireless_S);
