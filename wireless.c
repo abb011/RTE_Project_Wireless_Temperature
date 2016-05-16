@@ -108,11 +108,12 @@ void pullRemoteDevices(){
 	  }
 	D(printf("\nConnection Result%s : %d\n\n", clientIP, res));
 	}
-
+	ESP8266_WaitReady(wireless_S);
+	do{
 	res = ESP8266_ServerEnable(wireless_S, HB_PORT);
 		D(printf("Hosting a server at port %d: Success = 0: %d\n", HB_PORT, res));
 		ESP8266_WaitReady(wireless_S);
-		
+	}while(res);
 		//}while(res);
 	D(printf("Completed Getting connected Stations\n"));
 }

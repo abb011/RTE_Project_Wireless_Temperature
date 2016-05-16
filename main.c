@@ -116,7 +116,7 @@ int main(void)
 {
 
 
-  float sp;
+  float sp =25.0;
 
   // initialize
   
@@ -126,7 +126,7 @@ int main(void)
   init_LED_pins();
   init_button();
   initPID(20.0,5.0,0.0, temperature_array, &sp);
-  run_PID();
+
   
   for(uint16_t i = 0; i<ESP8266_MAX_CONNECTEDSTATIONS; i ++){
 	  temperature_array[i] = -1.0;
@@ -146,6 +146,7 @@ int main(void)
   add_timed_task(getLatestTemperature,4);
   add_timed_task(esp8266_update_func, .1);
   add_timed_task(pullRemoteDevices,30);
+  add_timed_task(run_PID, 15);
   //add_timed_task(sendToConnection, .05);
   
   
