@@ -42,8 +42,8 @@ static float read_temperature(TM_OneWire_t * tempSensor){
 	if(msb&SIGN_BIT){
 		sign = -1.0;
 	}
-	//printf("LSB: %x\n", lsb);
-	//printf("MSB: %x\n", msb);
+	//D(printf("LSB: %x\n", lsb));
+	//D(printf("MSB: %x\n", msb));
 	
 
 	

@@ -82,7 +82,7 @@ void initialise_monitor_handles();
 
 void printAVGTemps(){
 	float temp_C = getAvgTemperature();
-	printf("The Average Temperature is %f\n",temp_C);
+	D(printf("The Average Temperature is %f\n",temp_C));
 	return;
 }
 
@@ -109,7 +109,7 @@ float temperature_array[ESP8266_MAX_CONNECTEDSTATIONS];
 void getLatestTemperature(){
 	temperature_array[0] = local_temperature;
 	local_temperature = getTemperature();
-	printf("Current Temperature is %f\n", local_temperature);
+	D(printf("Current Temperature is %f\n", local_temperature));
 }
 
 int main(void)
@@ -121,7 +121,7 @@ int main(void)
   // initialize
   
   SystemInit();
-  initialise_monitor_handles();
+  D(initialise_monitor_handles());
   init_systick();
   init_LED_pins();
   init_button();
@@ -137,10 +137,10 @@ int main(void)
   //USART_Configuration();
 
   //uart_print(UART4, "Hello World\r\n");
-  printf("%d\n", init_tempSensor());
+  D(printf("%d\n", init_tempSensor()));
   delay_ms(1000);
   float temp_C = getTemperature();
-  printf("The current Temperature is %f\n",temp_C);
+  D(printf("The current Temperature is %f\n",temp_C));
 
   add_timed_task(storeTemperature, DS18B20_PERIOD);
   add_timed_task(getLatestTemperature,4);

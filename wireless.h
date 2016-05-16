@@ -1,6 +1,7 @@
 #include "ESP8266/esp8266.h"
 #include "stm32f4xx_gpio.h"
 #include <stdio.h>
+#include "defines.h"
 
 #define GET_HOMEPAGE "GET /index.html "
 #define SET_SP "GET /set_temp.asp?setpoint="

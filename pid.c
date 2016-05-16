@@ -67,7 +67,7 @@ void initPID(float kp, float ki, float kd, float * temp_array, float *setpoint){
 void run_PID(){
 	float error = (*sp)- getAverageTemperature(temperatures);
 	float op = arm_pid_f32(&pid_loop, error);
-	printf("Current Error is %f\nCurrent OP is %f\n",error, op);
+	D(printf("Current Error is %f\nCurrent OP is %f\n",error, op));
 	if(op<L_THRESHOLD)
 		op = 0.0;
 	if(op>H_THRESHOLD)

@@ -24,7 +24,7 @@
    ----------------------------------------------------------------------
  */
 #include "esp8266.h"
-
+#include "defines.h"
 
 static void LED_On(uint32_t i)
 {
@@ -93,7 +93,7 @@ static void LED_Off(uint32_t i)
 #define ESP8266_TIMEOUT                3000  /*!< Timeout value in milliseconds */
 
 /* Debug */
-#define ESP8266_DEBUG(x)               printf("%s", x)
+#define ESP8266_DEBUG(x)               D(printf("%s", x))
 
 /* Wrapper for sending strings */
 #define ESP8266_USARTSENDSTRING(str)   ESP8266_LL_USARTSend((uint8_t *)(str), strlen((char *)(str)))
@@ -531,7 +531,7 @@ ESP8266_Result_t ESP8266_Update(ESP8266_t* ESP8266) {
 		}
 	}
 	//if(BUFFER_Find(&USART_Buffer, (uint8_t *)"+IPD", 4) >= 0)
-	//	printf("received IPD Communication\n");
+	//	D(printf("received IPD Communication\n"));
 	/* If AT+UART command was used, only check if "OK" exists in buffer */
 	if (
 		ESP8266->ActiveCommand == ESP8266_COMMAND_UART && /*!< Active command is UART change */
@@ -560,7 +560,7 @@ ESP8266_Result_t ESP8266_Update(ESP8266_t* ESP8266) {
 		(stringlength = BUFFER_ReadString(&USART_Buffer, Received, sizeof(Received))) > 0 /*!< Something in USART buffer */
 	) {		
 		/* Parse received string */
-		//printf("Parsing from Main buffer\n");
+		//D(printf("Parsing from Main buffer\n"));
 		ParseReceived(ESP8266, Received, 1, stringlength);
 	}
 	
@@ -572,7 +572,7 @@ ESP8266_Result_t ESP8266_Update(ESP8266_t* ESP8266) {
 		(stringlength = BUFFER_ReadString(&TMP_Buffer, Received, sizeof(Received))) > 0 /*!< Something in TMP buffer */
 	) {
 		/* Parse received string */
-		//printf("Parsing from Temp Buffer?\n");
+		//D(printf("Parsing from Temp Buffer?\n"));
 		ParseReceived(ESP8266, Received, 0, stringlength);
 	}
 	
@@ -581,7 +581,7 @@ ESP8266_Result_t ESP8266_Update(ESP8266_t* ESP8266) {
 	if (ESP8266->IPD.InIPD) {
 		BUFFER_t* buff;
 		LED_On(0);
-		//printf("IN IPD MODE\n");
+		//D(printf("IN IPD MODE\n"));
 		/* Check for USART buffer */
 		if (ESP8266->IPD.USART_Buffer) {
 			buff = &USART_Buffer;
@@ -589,7 +589,7 @@ ESP8266_Result_t ESP8266_Update(ESP8266_t* ESP8266) {
 			buff = &TMP_Buffer;
 		}
 		
-		//printf("Bytes Received \n %d", ESP8266->Connection[ESP8266->IPD.ConnNumber].BytesReceived);
+		//D(printf("Bytes Received \n %d", ESP8266->Connection[ESP8266->IPD.ConnNumber].BytesReceived));
 		/* If anything received */
 		while (
 			ESP8266->IPD.InPtr < ESP8266->Connection[ESP8266->IPD.ConnNumber].BytesReceived && /*!< Still not everything received */
@@ -598,7 +598,7 @@ ESP8266_Result_t ESP8266_Update(ESP8266_t* ESP8266) {
 			/* Read from buffer */
 			BUFFER_Read(buff, (uint8_t *)&ch, 1);
 			//if(BUFFER_GetFull(buff)%10 ==0)
-			//	printf("Got Ch %c:%lu\n",ch,BUFFER_GetFull(buff));
+			//	D(printf("Got Ch %c:%lu\n",ch,BUFFER_GetFull(buff)));
 			/* Add from USART buffer */
 			ESP8266->Connection[ESP8266->IPD.ConnNumber].Data[ESP8266->IPD.InPtr] = ch;
 			
@@ -631,10 +631,10 @@ ESP8266_Result_t ESP8266_Update(ESP8266_t* ESP8266) {
 			char* ptr;
 			LED_Off(0);
 			LED_On(1);
-			printf("Received All bytes\n");
+			D(printf("Received All bytes\n"));
 			/* Not in IPD anymore */
 			ESP8266->IPD.InIPD = 0;
-			//printf("LEAVING INIPD MODE %d, %d\n", ESP8266->IPD.PtrTotal, ESP8266->Connection[ESP8266->IPD.ConnNumber].BytesReceived);
+			//D(printf("LEAVING INIPD MODE %d, %d\n", ESP8266->IPD.PtrTotal, ESP8266->Connection[ESP8266->IPD.ConnNumber].BytesReceived));
 			/* Set package data size */
 			ESP8266->Connection[ESP8266->IPD.ConnNumber].DataSize = ESP8266->IPD.InPtr;
 			ESP8266->Connection[ESP8266->IPD.ConnNumber].LastPart = 1;
@@ -1202,7 +1202,7 @@ ESP8266_Result_t ESP8266_SetAP(ESP8266_t* ESP8266, ESP8266_APConfig_t* ESP8266_C
 	ESP8266_USARTSENDCHAR(&hid);
 	ESP8266_USARTSENDSTRING("\r\n");
 	
-	//printf("Sending the Real Command\n");
+	//D(printf("Sending the Real Command\n"));
 	/* Send command */
 	SendCommand(ESP8266, ESP8266_COMMAND_CWSAP, NULL, NULL);
 	/* Return status */
@@ -2377,7 +2377,7 @@ void ParseReceived(ESP8266_t* ESP8266, char* Received, uint8_t from_usart_buffer
 		
 		/* Check if we have a closed connection, check the end of string */
 	} else if (bufflen > 9 && (ch_ptr = (char *)mem_mem(&Received[bufflen - 9], 9, ",CLOSED\r\n", 9)) != NULL && Received != ch_ptr) {
-		printf("Received the close command\n");
+		D(printf("Received the close command\n"));
 		uint8_t client, active;
 		Conn = &ESP8266->Connection[CHAR2NUM(*(ch_ptr - 1))];
 		
@@ -2405,7 +2405,7 @@ void ParseReceived(ESP8266_t* ESP8266, char* Received, uint8_t from_usart_buffer
 		} else {
 			/* Write to temporary buffer */
 			BUFFER_Write(&TMP_Buffer, (uint8_t *)(ch_ptr - 1), 10);
-			//printf("Writing into Temp Buffer\n");
+			//D(printf("Writing into Temp Buffer\n"));
 		}
 		
 		/* Check if we have a new connection, analyze only last part */
@@ -2430,7 +2430,7 @@ void ParseReceived(ESP8266_t* ESP8266, char* Received, uint8_t from_usart_buffer
 	/* Check if +IPD was received with incoming data */
 	if (strncmp(Received, "+IPD,", 5) == 0) {
 		uint16_t blength = bufflen;
-		//printf("ENTERING IPD MODE %s\n", Received);
+		//D(printf("ENTERING IPD MODE %s\n", Received));
 		/* If we are not in IPD mode already */
 		/* Go to IPD mode */
 		ESP8266->IPD.InIPD = 1;
@@ -2458,7 +2458,7 @@ void ParseReceived(ESP8266_t* ESP8266, char* Received, uint8_t from_usart_buffer
 		
 		/* Save number of received bytes */
 		Conn->BytesReceived = ParseNumber(&Received[ipd_ptr], &bytes_cnt);
-		//printf("Bytes REceived %d\n",Conn->BytesReceived );
+		//D(printf("Bytes REceived %d\n",Conn->BytesReceived ));
 		/* First time */
 		if (Conn->TotalBytesReceived == 0) {
 			/* Reset flag */
@@ -2479,7 +2479,7 @@ void ParseReceived(ESP8266_t* ESP8266, char* Received, uint8_t from_usart_buffer
 		
 		/* Increase pointer for number of characters for number and for comma */
 		ipd_ptr += bytes_cnt + 1;
-		printf("Bytes_CNT %d\n", bytes_cnt);
+		D(printf("Bytes_CNT %d\n", bytes_cnt));
 		/* Save IP */
 		ParseIP(&Received[ipd_ptr], Conn->RemoteIP, &bytes_cnt);
 		
@@ -2501,10 +2501,10 @@ void ParseReceived(ESP8266_t* ESP8266, char* Received, uint8_t from_usart_buffer
 		
 		/* Calculate size of buffer */
 		if ((blength - ipd_ptr) > Conn->BytesReceived) {
-			printf("SHOULD NEVER ENTER THIS CHUNK OF CODE\n");
+			D(printf("SHOULD NEVER ENTER THIS CHUNK OF CODE\n"));
 			blength = Conn->BytesReceived + ipd_ptr;
 		}
-		//printf("Blength %d, ipd_ptr %d\n", blength, ipd_ptr);
+		//D(printf("Blength %d, ipd_ptr %d\n", blength, ipd_ptr));
 		/* Copy content to beginning of buffer */
 		memcpy((uint8_t *)Conn->Data, (uint8_t *)&Received[ipd_ptr], blength - ipd_ptr);
 		
@@ -2513,7 +2513,7 @@ void ParseReceived(ESP8266_t* ESP8266, char* Received, uint8_t from_usart_buffer
 		if ((blength - ipd_ptr) >= Conn->BytesReceived) {
 			/* Add zero at the end of string */
 			Conn->Data[Conn->BytesReceived] = 0;
-			printf("Have the Full message adding a 0\n %s", &Received[ipd_ptr]);
+			D(printf("Have the Full message adding a 0\n %s", &Received[ipd_ptr]));
 		}
 		
 		/* Calculate remaining bytes */
@@ -2523,7 +2523,7 @@ void ParseReceived(ESP8266_t* ESP8266, char* Received, uint8_t from_usart_buffer
 		//Fixed this line
 		if (ESP8266->IPD.InPtr >= Conn->BytesReceived) {
 			/* Not in IPD anymore */
-			//printf("GOT ALL BYTES\n");
+			//D(printf("GOT ALL BYTES\n"));
 			ESP8266->IPD.InIPD = 0;
 			
 			/* Set package data size */
@@ -2801,7 +2801,7 @@ void ParseReceived(ESP8266_t* ESP8266, char* Received, uint8_t from_usart_buffer
 			if (CHARISNUM(Received[0])) {
 				/* Parse response */
 				ParseCWLIF(ESP8266, Received);
-				//printf("RECEIVED CWLIF %s\n", Received);
+				//D(printf("RECEIVED CWLIF %s\n", Received));
 			}
 		
 			if (strcmp(Received, "OK\r\n") == 0) {

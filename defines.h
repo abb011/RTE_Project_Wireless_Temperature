@@ -29,6 +29,16 @@
 #define TM_DEFINES_H
 
 #define ARM_MATH_CM4
+
+#define DEBUG_ON
+#ifdef DEBUG_ON
+#define D(x) x
+#else
+#define D(x)
+#endif
+
+// find printf(.*?)\)
+//replace D\(printf(\1\)\)
 //#define STM32F40_41xxx
 /* Put your global defines for all libraries here used in your project */
 #define ESP8266_USE_CONNECTED_STATIONS 1
