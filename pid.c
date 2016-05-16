@@ -8,6 +8,13 @@
  static uint8_t initted= 0;
  static float * temperatures;
  static float * sp;
+ static float op = 0;
+ static float lastTemp = 0;
+ 
+ void getDatas(float * op_, float * temp){
+	 *op_ = op;
+	 *temp = lastTemp;
+ }
  
  
  static void LED_On(uint32_t i)
@@ -70,8 +77,11 @@ static float reset_avg(float * temp){
 	}
 }
 void run_PID(){
-	float error = (*sp)- getAverageTemperature(temperatures);
-	float op = arm_pid_f32(&pid_loop, error);
+	lastTemp = getAverageTemperature(temperatures);
+	if(lastTemp<5.0)
+		lastTemp = *sp;
+	float error = (*sp)- lastTemp;
+	op = arm_pid_f32(&pid_loop, error);
 	D(printf("Current Error is %f\nCurrent OP is %f\n",error, op));
 	if(op<L_THRESHOLD)
 		op = 0.0;

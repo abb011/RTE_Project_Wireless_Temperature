@@ -13,5 +13,6 @@ float getAverageTemperature(float* temp);
 void run_PID();
 void initPID(float kp, float ki, float kd, float * temp_array, float *setpoint);
 void runPWM(uint32_t ms_incr);
+void getDatas(float * op_, float * temp);
 
 #endif

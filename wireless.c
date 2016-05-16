@@ -1,6 +1,6 @@
 #include "wireless.h"
 #include "defines.h"
-
+#include "pid.h"
 
 #define NO_REQUEST 0
 #define VALID_REQUEST 1
@@ -274,10 +274,13 @@ void serverReply(){
 			static char temp[4000]; //= "Content-Type: text/html\r\nContent-Length: 111\r\n\r\n<html>\r\n<body>\r\n<h1>Happy New Millennium!</h1>\r\n(more file contents)\r\n  .\r\n  .\r\n  .\r\n</body>\r\n</html>";
 			static char t1[100] = "HTTP/1.1 200 OK\r\n";
 			static char t0[1000];
-				if(reply[con->Number] == HOMEPAGE)
-					sprintf(t0,"<html> <title> Temperature Stuff</title> <body> Wifi Temperature Homepage </body>  <form action=\"set_temp.asp\">Current Set Point:%f New:<input type=\"text\" name=\"setpoint\">%cC<br><input type=\"submit\" value=\"Submit\"></form> </html>\n", *setpoint, (char)(176) );
+				if(reply[con->Number] == HOMEPAGE){
+					float op;
+					float cur_temp;
+					getDatas(&op, &cur_temp);
+					sprintf(t0,"<html> <title> Temperature Stuff</title> <body> Wifi Temperature Homepage </body>  <form action=\"set_temp.asp\">Current Set Point:%f New:<input type=\"text\" name=\"setpoint\">%cC<br><input type=\"submit\" value=\"Submit\"></form>\nCurrent Temp: %f\nCurrentOP: %f </html>\n", *setpoint, (char)(176),cur_temp,op);
 					//sD(printf(t0,"<html> <title> Temperature Stuff</title> <body> Wifi Temperature Homepage </body>  <form action=\"set_temp.asp\">Current Set Point:%f New:<input type=\"text\" name=\"setpoint\">%cC<br><input type=\"submit\" value=\"Submit\"></form> </html>\n", (char))(176), *setpoint);
-				if(reply[con->Number]==NEW_SETPOINT)
+				}if(reply[con->Number]==NEW_SETPOINT)
 					sprintf(t0,"<html> <title> Temperature Stuff</title> <body> You Submitted a New Setpoint: %f</body>  </html>\n", *setpoint);
 				if(reply[con->Number] == BAD_REQUEST){
 					sprintf(t1, "HTTP/1.0 404 Not Found\r\n");

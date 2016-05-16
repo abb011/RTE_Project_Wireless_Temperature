@@ -125,6 +125,7 @@ int main(void)
   init_systick();
   init_LED_pins();
   init_button();
+  init_tempSensor();
   initPID(20.0,5.0,0.0, temperature_array, &sp);
 
   
@@ -137,7 +138,7 @@ int main(void)
   //USART_Configuration();
 
   //uart_print(UART4, "Hello World\r\n");
-  D(printf("%d\n", init_tempSensor()));
+  //D(printf("%d\n", ));
   delay_ms(1000);
   float temp_C = getTemperature();
   D(printf("The current Temperature is %f\n",temp_C));
@@ -147,7 +148,6 @@ int main(void)
   add_timed_task(esp8266_update_func, .1);
   add_timed_task(pullRemoteDevices,30);
   add_timed_task(run_PID, 15);
-  //add_timed_task(sendToConnection, .05);
   
   
   //add_timed_task(printstuff,0.5);
