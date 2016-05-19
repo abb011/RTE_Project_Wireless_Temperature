@@ -5,6 +5,7 @@ static float temp_measured[NUM_READINGS];
 static uint32_t index_w=0;
 static  TM_OneWire_t temperatureSensor;
 
+//Initialize the Temperature Sensor
 static uint8_t init_ds18b20(TM_OneWire_t * tempSensor, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin){
 	TM_DELAY_Init();
 	TM_OneWire_Init(tempSensor, GPIOx, GPIO_Pin);
@@ -21,6 +22,7 @@ static uint8_t init_ds18b20(TM_OneWire_t * tempSensor, GPIO_TypeDef* GPIOx, uint
 	return numDevices;
 }
 
+//Read the Current measured temperature
 static float read_temperature(TM_OneWire_t * tempSensor){
 	uint8_t data[8];
 	uint8_t lsb, msb;
@@ -56,10 +58,12 @@ static float read_temperature(TM_OneWire_t * tempSensor){
 	return temp;
 }
 
+//Externally called init function.
 uint8_t init_tempSensor(){
 	return init_ds18b20(&temperatureSensor, GPIOC, GPIO_Pin_15);
 }
 
+//Gets the previously measured temperature as well as issues a new temperature conversion command. Cannot be called more frequently than every 750 ms. 
 float getTemperature(){
 	//Start getting a new Temp measurement
 	//Delay(1000);
@@ -83,7 +87,7 @@ float getTemperature(){
 void storeTemperature(){
 	getTemperature();
 }
-
+//Get the average of the last few measurements. This function ended up not being used as the temperature sensors are not noisy. 
 float getAvgTemperature(){
 	uint32_t limit = index_w;
 	uint32_t i;

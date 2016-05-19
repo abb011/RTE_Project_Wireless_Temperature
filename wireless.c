@@ -36,6 +36,7 @@ static void initDataServer();
 static void dataReply();
 static float * temperature;
 
+//Connect to and poll the temperatures from the station mode devices.
 void pullRemoteDevices(){
 	if(address != HOMEBASE)
 		return;
@@ -118,6 +119,7 @@ void pullRemoteDevices(){
 	D(printf("Completed Getting connected Stations\n"));
 }
 
+//Initialize the wireless module
 void initWireless(ESP8266_t *w, float * sp, float * temperature_p, float * temperatures_p_p, uint16_t numElements){
 	temperature_array = temperatures_p_p;
 	temperature = temperature_p;
@@ -155,6 +157,8 @@ void initWireless(ESP8266_t *w, float * sp, float * temperature_p, float * tempe
 		initDataServer();
 	}
 }
+
+//HTTP Request responder. Needs to be processed outside of the callbacks to prevent a potential stack issues from the "Update Function" being called constantly
 void sendToConnection(){
 	for(uint8_t i = 0; i < ESP8266_MAX_CONNECTIONS; i++){
 		if(timed_out[i]){
@@ -175,7 +179,7 @@ void sendToConnection(){
 }
 
 
-//Need to put initwifi into a while loop, potentially trying setting it to Accesspoint only mode.
+//Initialize the AccessPoint and HTTP Server
 uint16_t initHBServer(){
 	
   ESP8266_APConfig_t ap_s;
@@ -221,7 +225,7 @@ uint16_t initHBServer(){
 	return res;
 }
 
-
+//Connect to the Access Point and establish the Temperature Request server
 void initDataServer(){
 	ip_addr[0] = 0;
 	D(printf("Being Called Right Now \n"));
@@ -264,7 +268,7 @@ void initDataServer(){
 }
 
 
-//Handles HTTP Processing
+//Sends HTTP page
 static
 void serverReply(){
 	ESP8266_Connection_t * con;
@@ -310,6 +314,7 @@ void serverReply(){
 	}
 }
 
+//Send Temperature reply
 static
 void dataReply(){
 	ESP8266_Connection_t * con;
@@ -334,7 +339,7 @@ void dataReply(){
 	return;
 }
 
-
+//Parses HTTP Requests and temperature replies
 static void HBParseRequest(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection, char* Buffer){
 	timed_out[Connection->Number]=0;
 	D(printf("Server received data%d\n %s", strlen(Buffer), Buffer));
@@ -380,6 +385,7 @@ static void HBParseRequest(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection,
 	
 }
 
+//Handles Temperature Request parsing
 static void DataServerParseRequest(ESP8266_t* ESP8266, ESP8266_Connection_t* Connection, char* Buffer){
 	D(printf("Server received data%d\n %s", strlen(Buffer), Buffer));
 	timed_out[Connection->Number] = 0;

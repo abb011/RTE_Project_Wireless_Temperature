@@ -97,6 +97,7 @@ extern uint16_t * reply;
 
 
 
+// This function calls the "Update function" which does callback processing as well as calls HTTP parser update function (sendToConnection)
 void esp8266_update_func(){
 	ESP8266_Update(&wireless_S);
 	ESP8266_WaitReady(&wireless_S);
@@ -105,7 +106,9 @@ void esp8266_update_func(){
 
 float local_temperature= 0;
 
+
 float temperature_array[ESP8266_MAX_CONNECTEDSTATIONS];
+//Getting and Storing the local temperature
 void getLatestTemperature(){
 	temperature_array[0] = local_temperature;
 	local_temperature = getTemperature();
@@ -143,6 +146,7 @@ int main(void)
   float temp_C = getTemperature();
   D(printf("The current Temperature is %f\n",temp_C));
 
+  //Timed tasks that impliment the key features of the program
   add_timed_task(storeTemperature, DS18B20_PERIOD);
   add_timed_task(getLatestTemperature,4);
   add_timed_task(esp8266_update_func, .1);

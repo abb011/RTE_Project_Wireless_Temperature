@@ -11,12 +11,13 @@
  static float op = 0;
  static float lastTemp = 0;
  
+ //Gets current Output and average temperature values. These values were internal but are presented on teh HTTP page
  void getDatas(float * op_, float * temp){
 	 *op_ = op;
 	 *temp = lastTemp;
  }
  
- 
+ //Used for PWM implimentation and display
  static void LED_On(uint32_t i)
 {
   GPIOD->BSRRL = 1 << (i+12);
@@ -27,6 +28,7 @@ static void LED_Off(uint32_t i)
   GPIOD->BSRRH = 1 << (i+12);
 }
 
+//Init the PWM pins
  static void initPWM(uint32_t period_ms){
 	period = period_ms;
 
@@ -40,7 +42,7 @@ static void LED_Off(uint32_t i)
 	GPIO_ResetBits(GPIOB, GPIO_Pin_10 );
 }
 
-
+//Run PWM. This function needs to be called periodically(systick handler) to control the PWM, ms_incr is the time in miliseconds since the last call.
 void runPWM(uint32_t ms_incr){
 	if(initted ==0)
 		return;
@@ -58,7 +60,7 @@ void runPWM(uint32_t ms_incr){
 
 
 
-
+//Init the PID controller
 void initPID(float kp, float ki, float kd, float * temp_array, float *setpoint){
     initPWM(60*1000);
 	pid_loop.Kp = kp;
@@ -71,11 +73,14 @@ void initPID(float kp, float ki, float kd, float * temp_array, float *setpoint){
 	initted = 1;
 }
 
+//Resets the temperature average array to handle lost devices from impacting the average temperature
 static float reset_avg(float * temp){
 	for(uint8_t i = 0; i < ESP8266_MAX_CONNECTEDSTATIONS; i++){
 		temp[i] = -1;
 	}
 }
+
+//Run the PID with the latest values. This function should be called to update the PWM output
 void run_PID(){
 	lastTemp = getAverageTemperature(temperatures);
 	if(lastTemp<5.0)
@@ -93,7 +98,7 @@ void run_PID(){
 }
 
 
-
+//Calculates and returns the average temperature values. The only values considered are those above 0.
 float getAverageTemperature(float* temp){
 	float average = 0;
 	uint8_t count = 0;
