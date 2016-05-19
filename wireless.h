@@ -1,6 +1,8 @@
 #include "ESP8266/esp8266.h"
+#include "ESP8266/esp8266_ll.h"
 #include "stm32f4xx_gpio.h"
 #include <stdio.h>
+#include "defines.h"
 
 #define GET_HOMEPAGE "GET /index.html "
 #define SET_SP "GET /set_temp.asp?setpoint="
@@ -15,5 +17,5 @@
 
 
 void sendToConnection();
-void initWireless(ESP8266_t *w, float * sp, float * temperature_p, float ** temperatures_p_p, uint16_t numElements);
+void initWireless(ESP8266_t *w, float * sp, float * temperature_p, float * temperatures_p_p, uint16_t numElements);
 void pullRemoteDevices();

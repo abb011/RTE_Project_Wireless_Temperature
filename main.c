@@ -1,7 +1,10 @@
+#include "defines.h"
 #include "stm32f4xx.h"
 #include "stm32f4xx_rcc.h"
 #include "stm32f4xx_gpio.h"
 #include "wireless.h"
+#include "pid.h"
+
 
 
 #include "ds18b20.h"
@@ -79,7 +82,7 @@ void initialise_monitor_handles();
 
 void printAVGTemps(){
 	float temp_C = getAvgTemperature();
-	printf("The Average Temperature is %f\n",temp_C);
+	D(printf("The Average Temperature is %f\n",temp_C));
 	return;
 }
 
@@ -94,48 +97,61 @@ extern uint16_t * reply;
 
 
 
+// This function calls the "Update function" which does callback processing as well as calls HTTP parser update function (sendToConnection)
 void esp8266_update_func(){
 	ESP8266_Update(&wireless_S);
+	ESP8266_WaitReady(&wireless_S);
 	sendToConnection();
 }
 
 float local_temperature= 0;
 
+
+float temperature_array[ESP8266_MAX_CONNECTEDSTATIONS];
+//Getting and Storing the local temperature
 void getLatestTemperature(){
+	temperature_array[0] = local_temperature;
 	local_temperature = getTemperature();
-	printf("Current Temperature is %f\n", local_temperature);
+	D(printf("Current Temperature is %f\n", local_temperature));
 }
 
 int main(void)
 {
 
 
-  float sp;
-  float temperature_array[ESP8266_MAX_CONNECTEDSTATIONS];
+  float sp =25.0;
+
   // initialize
   
   SystemInit();
-  initialise_monitor_handles();
+  D(initialise_monitor_handles());
   init_systick();
   init_LED_pins();
   init_button();
+  init_tempSensor();
+  initPID(20.0,5.0,0.0, temperature_array, &sp);
+
   
-  initWireless(&wireless_S, &sp, &local_temperature, &temperature_array, ESP8266_MAX_CONNECTEDSTATIONS);
+  for(uint16_t i = 0; i<ESP8266_MAX_CONNECTEDSTATIONS; i ++){
+	  temperature_array[i] = -1.0;
+  }
+  initWireless(&wireless_S, &sp, &local_temperature, temperature_array, ESP8266_MAX_CONNECTEDSTATIONS);
   
   //Init the UARt
   //USART_Configuration();
 
   //uart_print(UART4, "Hello World\r\n");
-  printf("%d\n", init_tempSensor());
+  //D(printf("%d\n", ));
   delay_ms(1000);
   float temp_C = getTemperature();
-  printf("The current Temperature is %f\n",temp_C);
+  D(printf("The current Temperature is %f\n",temp_C));
 
+  //Timed tasks that impliment the key features of the program
   add_timed_task(storeTemperature, DS18B20_PERIOD);
   add_timed_task(getLatestTemperature,4);
   add_timed_task(esp8266_update_func, .1);
-  add_timed_task(pullRemoteDevices,10);
-  //add_timed_task(sendToConnection, .05);
+  add_timed_task(pullRemoteDevices,30);
+  add_timed_task(run_PID, 15);
   
   
   //add_timed_task(printstuff,0.5);

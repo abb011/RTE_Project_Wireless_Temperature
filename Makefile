@@ -1,8 +1,8 @@
 # Source files 
-SRCS = main.c system_stm32f4xx.c homework3.c 
+SRCS = main.c system_stm32f4xx.c homework3.c  pid.c
 UART_SRCS = UART/tm_stm32f4_usart.c
 ESP8266_SRCS = ESP8266/esp8266.c ESP8266/buffer.c ESP8266/esp8266_ll.c  wireless.c 
-DS18_SRCS = ds18b20.c OneWire/tm_stm32f4_delay.c OneWire/tm_stm32f4_onewire.c OneWire/tm_stm32f4_timer_properties.c OneWire/tm_stm32f4_gpio.c  
+DS18_SRCS = ds18b20.c OneWire/tm_stm32f4_delay.c OneWire/tm_stm32f4_onewire.c OneWire/tm_stm32f4_timer_properties.c OneWire/tm_stm32f4_gpio.c  OneWire/tm_stm32f4_pwm.c
 SRCS += $(DS18_SRCS) $(ESP8266_SRCS)
 #ACCELEROMETER_SRCS = accelerometers/accelerometers.c accelerometers/tm_accelerometers/tm_stm32f4_lis302dl_lis3dsh.c accelerometers/tm_accelerometers/tm_stm32f4_spi.c
 #SRCS += $(ACCELEROMETER_SRCS)
@@ -63,8 +63,9 @@ SRCS += $(STM_COMMON)/Libraries/CMSIS/ST/STM32F4xx/Source/Templates/TrueSTUDIO/s
 
 # add required files from STM32 standard peripheral library
 STM_SRCDIR = $(STM_COMMON)/Libraries/STM32F4xx_StdPeriph_Driver/src
-SRCS += $(STM_SRCDIR)/stm32f4xx_gpio.c $(STM_SRCDIR)/stm32f4xx_spi.c $(STM_SRCDIR)/stm32f4xx_rcc.c  $(STM_SRCDIR)/stm32f4xx_usart.c  $(STM_SRCDIR)/misc.c
+SRCS += $(STM_SRCDIR)/stm32f4xx_gpio.c $(STM_SRCDIR)/stm32f4xx_spi.c $(STM_SRCDIR)/stm32f4xx_rcc.c  $(STM_SRCDIR)/stm32f4xx_usart.c  $(STM_SRCDIR)/misc.c $(STM_SRCDIR)/stm32f4xx_tim.c 
 
+SRCS += $(STM_COMMON)/Libraries/CMSIS/DSP_Lib/Source/ControllerFunctions/arm_pid_init_f32.c
 OBJS = $(addprefix $(BUILDDIR)/, $(addsuffix .o, $(basename $(SRCS))))
 
 SEMIHOSTING_FLAGS = --specs=rdimon.specs -lc -lrdimon 

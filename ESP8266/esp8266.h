@@ -34,6 +34,7 @@
  */
 #ifndef ESP8266_H
 #define ESP8266_H 100
+#include "defines.h"
 
 /* C++ detection */
 #ifdef __cplusplus
